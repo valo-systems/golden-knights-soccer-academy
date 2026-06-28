@@ -1,0 +1,17 @@
+Options -MultiViews
+AddType image/svg+xml .svg .svgz
+
+RewriteEngine On
+
+# Redirect HTTP to HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Redirect www to non-www
+RewriteCond %{HTTP_HOST} ^www\.goldenknightsfc\.valosystems\.co\.za [NC]
+RewriteRule ^ https://goldenknightsfc.valosystems.co.za%{REQUEST_URI} [L,R=301]
+
+# SPA fallback — all non-file/non-directory requests → index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /index.html [L]

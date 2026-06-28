@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://goldenknightsfc.valosystems.co.za/sitemap.xml
