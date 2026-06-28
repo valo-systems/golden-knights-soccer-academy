@@ -167,25 +167,90 @@ function Tiers({ onChoose }: { onChoose: (tier: string) => void }) {
   );
 }
 
-/* -------------------------------------------------------------------- PROOF */
-function Proof() {
-  const slots = ["Platinum", "Golden", "Silver", "Community", "In-kind", "Your brand"];
+/* --------------------------------------------------------------- CURRENT PARTNERS */
+function CurrentPartners() {
   return (
     <section className="bg-background py-24 sm:py-28">
       <div className="container-gk">
         <SectionHeading
-          eyebrow="Proof & partners"
-          title={<>Visibility you can see.</>}
-          intro="Branded kit and banners at every match, and recognition for the brands behind our players."
+          eyebrow="Our partners"
+          title={<>The brands behind our players.</>}
+          intro="These businesses invest in youth development and earn real, visible recognition at every session, match, and tournament."
         />
-        <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
+
+        {/* Agape Water — featured partner card */}
+        <Reveal>
+          <div className="mt-12 overflow-hidden rounded-3xl border border-border bg-card">
+            <div className="grid lg:grid-cols-[1fr_1.4fr]">
+              {/* logo panel */}
+              <div className="flex items-center justify-center bg-[linear-gradient(135deg,#0a1628,#0d2040)] px-12 py-14">
+                <img
+                  src="/img/sponsors/agape-water-logo-transparent.png"
+                  alt="Agape Water"
+                  loading="lazy"
+                  className="w-full max-w-[220px]"
+                />
+              </div>
+
+              {/* detail panel */}
+              <div className="flex flex-col justify-center p-8 sm:p-10">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  Official hydration partner
+                </span>
+                <h3 className="mt-4 font-heading text-3xl font-black text-foreground">
+                  Agape Water
+                </h3>
+                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                  Agape Water supplies premium mineral water to our players and coaching staff at
+                  every training session and match day. Keeping Golden Knights hydrated and
+                  performing at their best, from first whistle to final whistle.
+                </p>
+                <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-6 sm:grid-cols-3">
+                  {[
+                    { label: "Hydration", detail: "Every match day" },
+                    { label: "Training", detail: "Every session" },
+                    { label: "Tournaments", detail: "Full season" },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <p className="text-sm font-bold text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* open slots */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {["Platinum", "Golden", "Silver"].map((tier, i) => (
+            <Reveal key={tier} delay={i}>
+              <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40">
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-dashed border-border">
+                  <span className="text-xl">+</span>
+                </div>
+                <div>
+                  <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                    {tier} sponsor
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Your brand here</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* matchday photo strip */}
+        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
           {["academy-01.jpg", "academy-05.jpg", "academy-02.jpg", "academy-06.webp"].map(
             (file, i) => (
-              <Reveal key={i} delay={i}>
+              <Reveal key={file} delay={i}>
                 <div className="overflow-hidden rounded-2xl">
                   <img
                     src={`/img/photos/${file}`}
-                    alt="Branded matchday"
+                    alt="Match day"
                     loading="lazy"
                     className="aspect-square w-full object-cover object-center"
                   />
@@ -193,22 +258,6 @@ function Proof() {
               </Reveal>
             )
           )}
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {slots.map((s, i) => (
-            <Reveal key={s} delay={i % 3}>
-              <div
-                className={cn(
-                  "flex aspect-video items-center justify-center rounded-2xl border bg-card px-2 text-center font-display text-xs font-semibold uppercase tracking-wide",
-                  s === "Your brand"
-                    ? "border-dashed border-primary text-primary"
-                    : "border-border text-muted-foreground"
-                )}
-              >
-                {s}
-              </div>
-            </Reveal>
-          ))}
         </div>
       </div>
     </section>
@@ -413,7 +462,7 @@ export function Sponsors() {
       <Hero />
       <Impact />
       <Tiers onChoose={choose} />
-      <Proof />
+      <CurrentPartners />
       <Enquiry selected={selected} setSelected={setSelected} />
     </>
   );
