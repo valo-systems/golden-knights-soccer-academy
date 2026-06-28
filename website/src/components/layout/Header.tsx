@@ -160,7 +160,7 @@ export function Header() {
             <Link to="/register">Book a Trial</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/sponsors">Sponsor a Player</Link>
+            <Link to="/sponsors">Sponsor</Link>
           </Button>
         </div>
 
@@ -210,7 +210,7 @@ export function Header() {
                   <Link to="/register">Book a Trial</Link>
                 </Button>
                 <Button asChild size="md" className="flex-1">
-                  <Link to="/sponsors">Sponsor a Player</Link>
+                  <Link to="/sponsors">Sponsor</Link>
                 </Button>
               </div>
             </div>

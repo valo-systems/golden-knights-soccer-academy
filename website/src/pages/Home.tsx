@@ -86,7 +86,7 @@ function Hero() {
             variant="outline"
             className="border-white/25 text-white hover:bg-white/10"
           >
-            <Link to="/sponsors">Sponsor a Player</Link>
+            <Link to="/sponsors">Sponsor</Link>
           </Button>
         </motion.div>
       </motion.div>

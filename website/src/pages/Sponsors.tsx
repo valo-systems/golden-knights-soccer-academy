@@ -183,9 +183,9 @@ function CurrentPartners() {
           <div className="mt-12 overflow-hidden rounded-3xl border border-border bg-card">
             <div className="grid lg:grid-cols-[1fr_1.4fr]">
               {/* logo panel */}
-              <div className="flex items-center justify-center bg-[linear-gradient(135deg,#0a1628,#0d2040)] px-12 py-14">
+              <div className="flex items-center justify-center bg-white px-12 py-14">
                 <img
-                  src="/img/sponsors/agape-water-logo-transparent.png"
+                  src="/img/sponsors/agape-water-logo.png"
                   alt="Agape Water"
                   loading="lazy"
                   className="w-full max-w-[220px]"
