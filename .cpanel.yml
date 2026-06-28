@@ -6,8 +6,8 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/find $DEPLOYPATH -mindepth 1 -maxdepth 1 -not -name '.htaccess' -exec /bin/rm -rf {} +
     # Deploy SPA build
-    - /bin/cp -R dist/. $DEPLOYPATH
-    - /bin/cp .htaccess $DEPLOYPATH/.htaccess
+    - /bin/cp -R website/dist/. $DEPLOYPATH
+    - /bin/cp website/.htaccess $DEPLOYPATH/.htaccess
     # Set permissions
     - /bin/find $DEPLOYPATH -type d -exec /bin/chmod 755 {} +
     - /bin/find $DEPLOYPATH -type f -exec /bin/chmod 644 {} +
