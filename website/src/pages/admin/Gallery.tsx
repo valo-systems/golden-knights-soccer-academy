@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { Upload, Link2, Trash2, ChevronUp, ChevronDown, ImagePlus } from "lucide-react";
+import { ChevronDown, ChevronUp, ImagePlus, Link2, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { GALLERY_CATEGORIES, type GalleryCategory } from "@/admin/types";
-import { AdminHeader, Card, AdminIconButton } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export function AdminGallery() {
   const { galleryPhotos, addGalleryPhoto, removeGalleryPhoto, moveGalleryPhoto } = useAdmin();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [adding, setAdding] = useState(false);
 
   const [src, setSrc] = useState("");
   const [caption, setCaption] = useState("");
@@ -25,28 +26,145 @@ export function AdminGallery() {
     reader.readAsDataURL(file);
   }
 
-  function add(e: React.FormEvent) {
+  function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!src) return;
     addGalleryPhoto({ src, caption: caption.trim() || undefined, category });
+    close();
+  }
+
+  function close() {
+    setAdding(false);
     setSrc("");
     setCaption("");
     if (fileRef.current) fileRef.current.value = "";
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <AdminHeader
         title="Gallery"
         subtitle="Add and arrange the photos shown on the public gallery page."
+        actions={
+          <>
+            <p className="self-center text-xs text-[#9a9690]">Order here is the order shown publicly.</p>
+            <Button type="button" onClick={() => setAdding(true)}>
+              <Plus /> Add photo
+            </Button>
+          </>
+        }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        {/* add photo */}
-        <Card className="h-fit p-6">
-          <h2 className="font-heading text-xl font-black text-[#111217]">Add a photo</h2>
+      <Card className="overflow-hidden border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
+        {galleryPhotos.length === 0 ? (
+          <EmptyState onAdd={() => setAdding(true)} />
+        ) : (
+          <>
+            {/* desktop table */}
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#fbfaf8] text-xs font-black uppercase tracking-wide text-[#6b6f76]">
+                  <tr>
+                    <th className="px-5 py-3">Photo</th>
+                    <th className="px-5 py-3">Category</th>
+                    <th className="px-5 py-3">Caption</th>
+                    <th className="px-5 py-3 text-right">Order / Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eee8e2]">
+                  {galleryPhotos.map((p, i) => (
+                    <tr key={p.id} className="transition-colors hover:bg-[#fbfaf8]">
+                      <td className="px-5 py-4">
+                        <img
+                          src={p.src}
+                          alt={p.caption ?? ""}
+                          className="size-14 rounded-xl object-cover"
+                        />
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                          {p.category}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-[#6b6f76]">{p.caption || "—"}</td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <AdminIconButton
+                            label="Move up"
+                            icon={ChevronUp}
+                            onClick={() => moveGalleryPhoto(p.id, -1)}
+                            disabled={i === 0}
+                          />
+                          <AdminIconButton
+                            label="Move down"
+                            icon={ChevronDown}
+                            onClick={() => moveGalleryPhoto(p.id, 1)}
+                            disabled={i === galleryPhotos.length - 1}
+                          />
+                          <AdminIconButton
+                            label="Remove"
+                            icon={Trash2}
+                            tone="danger"
+                            onClick={() => removeGalleryPhoto(p.id)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          <div className="mt-4 inline-flex rounded-full border border-[#e7e2dc] bg-[#f8f5f2] p-1 text-sm font-semibold">
+            {/* mobile cards */}
+            <div className="space-y-3 p-4 lg:hidden">
+              {galleryPhotos.map((p, i) => (
+                <article
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-2xl border border-[#e7e2dc] bg-white p-3 shadow-[0_4px_12px_rgba(17,18,23,0.04)]"
+                >
+                  <img
+                    src={p.src}
+                    alt={p.caption ?? ""}
+                    className="size-16 shrink-0 rounded-xl object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#111217]">
+                      {p.caption || "Untitled"}
+                    </p>
+                    <span className="mt-1 inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                      {p.category}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <AdminIconButton
+                      label="Move up"
+                      icon={ChevronUp}
+                      onClick={() => moveGalleryPhoto(p.id, -1)}
+                      disabled={i === 0}
+                    />
+                    <AdminIconButton
+                      label="Move down"
+                      icon={ChevronDown}
+                      onClick={() => moveGalleryPhoto(p.id, 1)}
+                      disabled={i === galleryPhotos.length - 1}
+                    />
+                    <AdminIconButton
+                      label="Remove"
+                      icon={Trash2}
+                      tone="danger"
+                      onClick={() => removeGalleryPhoto(p.id)}
+                    />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
+
+      <Modal title="Add a photo" open={adding} onClose={close}>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="inline-flex rounded-full border border-[#e7e2dc] bg-[#f8f5f2] p-1 text-sm font-semibold">
             <button
               type="button"
               onClick={() => setMode("upload")}
@@ -69,94 +187,61 @@ export function AdminGallery() {
             </button>
           </div>
 
-          <form onSubmit={add} className="mt-5 space-y-4">
-            {mode === "upload" ? (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#cfc8c0] bg-[#fbfaf8] py-10 text-sm font-semibold text-[#6b6f76] transition hover:border-primary hover:text-primary"
-              >
-                <ImagePlus className="size-7" />
-                Choose an image from your device
-                <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
-              </button>
-            ) : (
-              <Field label="Image URL" required>
-                <Input value={src} onChange={(e) => setSrc(e.target.value)} placeholder="https://..." />
-              </Field>
-            )}
-
-            {src && (
-              <div className="overflow-hidden rounded-2xl border border-[#e7e2dc]">
-                <img src={src} alt="Preview" className="aspect-[4/3] w-full object-cover" />
-              </div>
-            )}
-
-            <Field label="Caption" optional>
-              <Input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="e.g. Match day intensity" />
-            </Field>
-            <Field label="Category" required>
-              <Select
-                value={category}
-                onChange={(v) => setCategory(v as GalleryCategory)}
-                options={GALLERY_CATEGORIES.map((c) => ({ value: c, label: c }))}
-              />
-            </Field>
-
-            <Button type="submit" size="lg" className="w-full" disabled={!src}>
-              <ImagePlus /> Add to gallery
-            </Button>
-          </form>
-        </Card>
-
-        {/* photo list */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-xl font-black text-[#111217]">
-              Photos <span className="text-[#9a9690]">({galleryPhotos.length})</span>
-            </h2>
-            <p className="text-xs text-[#9a9690]">Order here is the order shown publicly.</p>
-          </div>
-
-          {galleryPhotos.length === 0 ? (
-            <p className="mt-8 text-center text-sm text-[#6b6f76]">No photos yet. Add one to get started.</p>
+          {mode === "upload" ? (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#cfc8c0] bg-[#fbfaf8] py-10 text-sm font-semibold text-[#6b6f76] transition hover:border-primary hover:text-primary"
+            >
+              <ImagePlus className="size-7" />
+              Choose an image from your device
+              <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+            </button>
           ) : (
-            <div className="mt-5 space-y-3">
-              {galleryPhotos.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-4 rounded-2xl border border-[#eee8e2] bg-[#fbfaf8] p-3">
-                  <img src={p.src} alt={p.caption ?? ""} className="size-16 shrink-0 rounded-xl object-cover" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-[#111217]">{p.caption || "Untitled"}</p>
-                    <span className="mt-1 inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                      {p.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <AdminIconButton
-                      label="Move up"
-                      icon={ChevronUp}
-                      onClick={() => moveGalleryPhoto(p.id, -1)}
-                      disabled={i === 0}
-                    />
-                    <AdminIconButton
-                      label="Move down"
-                      icon={ChevronDown}
-                      onClick={() => moveGalleryPhoto(p.id, 1)}
-                      disabled={i === galleryPhotos.length - 1}
-                    />
-                    <AdminIconButton
-                      label="Remove"
-                      icon={Trash2}
-                      tone="danger"
-                      onClick={() => removeGalleryPhoto(p.id)}
-                    />
-                  </div>
-                </div>
-              ))}
+            <Field label="Image URL" required>
+              <Input value={src} onChange={(e) => setSrc(e.target.value)} placeholder="https://..." />
+            </Field>
+          )}
+
+          {src && (
+            <div className="overflow-hidden rounded-2xl border border-[#e7e2dc]">
+              <img src={src} alt="Preview" className="aspect-[4/3] w-full object-cover" />
             </div>
           )}
-        </Card>
-      </div>
+
+          <Field label="Caption" optional>
+            <Input
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="e.g. Match day intensity"
+            />
+          </Field>
+          <Field label="Category" required>
+            <Select
+              value={category}
+              onChange={(v) => setCategory(v as GalleryCategory)}
+              options={GALLERY_CATEGORIES.map((c) => ({ value: c, label: c }))}
+            />
+          </Field>
+
+          <Button type="submit" size="lg" className="w-full" disabled={!src}>
+            <ImagePlus /> Add to gallery
+          </Button>
+        </form>
+      </Modal>
+    </>
+  );
+}
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <ImagePlus className="size-10 text-[#d9d2ca]" />
+      <p className="mt-3 text-sm font-bold text-[#111217]">No photos yet.</p>
+      <p className="mt-1 text-xs text-[#6b6f76]">Add your first photo to get started.</p>
+      <Button type="button" onClick={onAdd} className="mt-5">
+        <Plus /> Add photo
+      </Button>
     </div>
   );
 }
