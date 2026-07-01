@@ -31,6 +31,7 @@ import {
   WhatsAppLink,
   formatDate,
   useConfirm,
+  useToast,
   waLink,
 } from "@/components/admin/ui";
 import { Select, DatePicker } from "@/components/admin/controls";
@@ -74,6 +75,7 @@ export function AdminProspects() {
   const { prospects, addProspect, setProspectStatus, addProspectNote, convertProspect, removeProspect } =
     useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [adding, setAdding] = useState(false);
@@ -153,6 +155,7 @@ export function AdminProspects() {
     setForm(emptyProspect);
     setAdding(false);
     setSelectedId(id);
+    toast("Prospect added.");
   }
 
   function saveNote(e: FormEvent) {
@@ -160,11 +163,13 @@ export function AdminProspects() {
     if (!selected || !note.trim()) return;
     addProspectNote(selected.id, note.trim());
     setNote("");
+    toast("Note saved.", "info");
   }
 
   function convert(id: string) {
     convertProspect(id);
     setSelectedId(null);
+    toast("Converted to member.");
   }
 
   return (
@@ -209,7 +214,7 @@ export function AdminProspects() {
               message: `${p ? prospectName(p) : "This enquiry"} will be permanently removed.`,
               danger: true,
             });
-            if (ok) removeProspect(id);
+            if (ok) { removeProspect(id); toast("Enquiry removed.", "danger"); }
           }}
           onAdd={() => setAdding(true)}
         />
@@ -226,7 +231,7 @@ export function AdminProspects() {
               message: `${p ? prospectName(p) : "This enquiry"} will be permanently removed.`,
               danger: true,
             });
-            if (ok) removeProspect(id);
+            if (ok) { removeProspect(id); toast("Enquiry removed.", "danger"); }
           }}
           onAdd={() => setAdding(true)}
         />

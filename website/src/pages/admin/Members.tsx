@@ -35,6 +35,7 @@ import {
   WhatsAppLink,
   formatDate,
   useConfirm,
+  useToast,
   waLink,
 } from "@/components/admin/ui";
 import { Select as MenuSelect, DatePicker } from "@/components/admin/controls";
@@ -65,6 +66,7 @@ const emptyMember = {
 export function AdminMembers() {
   const { members, fees, addMember, updateMember, removeMember, recordPayment, updatePhotoConsent } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [adding, setAdding] = useState(false);
@@ -142,12 +144,14 @@ export function AdminMembers() {
         guardianEmail: form.guardianEmail || undefined,
       });
       setEditingId(null);
+      toast("Member updated.");
     } else {
       addMember({
         ...form,
         dob: form.dob || undefined,
         guardianEmail: form.guardianEmail || undefined,
       });
+      toast("Member added.");
     }
     setForm(emptyMember);
     setAdding(false);
@@ -218,7 +222,7 @@ export function AdminMembers() {
               message: `${m ? `${m.firstName} ${m.lastName}` : "This member"} will be permanently removed, including all payment history.`,
               danger: true,
             });
-            if (ok) removeMember(id);
+            if (ok) { removeMember(id); toast("Member removed.", "danger"); }
           }}
           onRecordPayment={recordPayment}
           onAdd={() => setAdding(true)}
@@ -235,7 +239,7 @@ export function AdminMembers() {
               message: `${m ? `${m.firstName} ${m.lastName}` : "This member"} will be permanently removed, including all payment history.`,
               danger: true,
             });
-            if (ok) removeMember(id);
+            if (ok) { removeMember(id); toast("Member removed.", "danger"); }
           }}
           onRecordPayment={recordPayment}
           onAdd={() => setAdding(true)}
@@ -329,8 +333,12 @@ export function AdminMembers() {
             onPaid={() => {
               recordPayment(selected.id);
               setSelectedId(null);
+              toast("Payment recorded.");
             }}
-            onTogglePhotoConsent={(consent) => updatePhotoConsent(selected.id, consent)}
+            onTogglePhotoConsent={(consent) => {
+              updatePhotoConsent(selected.id, consent);
+              toast(consent ? "Photo consent granted." : "Photo consent removed.", "info");
+            }}
           />
         )}
       </Modal>

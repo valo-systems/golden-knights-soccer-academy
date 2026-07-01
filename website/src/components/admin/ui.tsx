@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type AnchorHTMLAttributes,
@@ -9,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { AlertTriangle, MessageCircle, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, MessageCircle, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RenewalState } from "@/admin/store";
@@ -117,6 +118,106 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 export function useConfirm() {
   const ctx = useContext(ConfirmContext);
   if (!ctx) throw new Error("useConfirm must be used inside <ConfirmProvider>");
+  return ctx;
+}
+
+// ─── Toast notifications ──────────────────────────────────────────────────────
+
+type ToastTone = "success" | "info" | "danger";
+
+type Toast = {
+  id: number;
+  message: string;
+  tone: ToastTone;
+};
+
+type ToastContextValue = (message: string, tone?: ToastTone) => void;
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+const TOAST_ICONS: Record<ToastTone, typeof CheckCircle2> = {
+  success: CheckCircle2,
+  info: Info,
+  danger: AlertTriangle,
+};
+
+const TOAST_STYLES: Record<ToastTone, string> = {
+  success: "border-green-200 bg-green-50 text-green-800",
+  info: "border-[#e7e2dc] bg-white text-[#111217]",
+  danger: "border-red-200 bg-red-50 text-red-800",
+};
+
+const TOAST_ICON_STYLES: Record<ToastTone, string> = {
+  success: "text-green-600",
+  info: "text-[#6b6f76]",
+  danger: "text-red-500",
+};
+
+let _nextId = 0;
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const toast = useCallback((message: string, tone: ToastTone = "success") => {
+    const id = ++_nextId;
+    setToasts((prev) => [...prev, { id, message, tone }]);
+  }, []);
+
+  function dismiss(id: number) {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }
+
+  return (
+    <ToastContext.Provider value={toast}>
+      {children}
+      <div className="pointer-events-none fixed bottom-6 right-5 z-[70] flex flex-col items-end gap-2">
+        <AnimatePresence initial={false}>
+          {toasts.map((t) => (
+            <ToastItem key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
+          ))}
+        </AnimatePresence>
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
+  const Icon = TOAST_ICONS[toast.tone];
+
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 3500);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 32, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 32, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 420, damping: 30 }}
+      className={cn(
+        "pointer-events-auto flex w-full max-w-xs items-center gap-3 rounded-2xl border px-4 py-3 shadow-[0_8px_24px_rgba(17,18,23,0.10)]",
+        TOAST_STYLES[toast.tone]
+      )}
+    >
+      <Icon className={cn("size-4 shrink-0", TOAST_ICON_STYLES[toast.tone])} />
+      <p className="flex-1 text-sm font-semibold leading-snug">{toast.message}</p>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="shrink-0 rounded-full p-0.5 opacity-50 transition hover:opacity-100"
+        aria-label="Dismiss"
+      >
+        <X className="size-3.5" />
+      </button>
+    </motion.div>
+  );
+}
+
+export function useToast() {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used inside <ToastProvider>");
   return ctx;
 }
 

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { ChevronDown, ChevronUp, ImagePlus, Link2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { GALLERY_CATEGORIES, type GalleryCategory, type GalleryPhoto } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, useConfirm } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, useConfirm, useToast } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export function AdminGallery() {
   const { galleryPhotos, addGalleryPhoto, updateGalleryPhoto, removeGalleryPhoto, moveGalleryPhoto } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -48,8 +49,10 @@ export function AdminGallery() {
     if (!src) return;
     if (editingId) {
       updateGalleryPhoto(editingId, { caption: caption.trim() || undefined, category });
+      toast("Photo updated.");
     } else {
       addGalleryPhoto({ src, caption: caption.trim() || undefined, category });
+      toast("Photo added.");
     }
     close();
   }
@@ -129,7 +132,7 @@ export function AdminGallery() {
                             tone="danger"
                             onClick={async () => {
                               const ok = await confirm({ title: "Remove photo?", message: `"${p.caption || "This photo"}" will be permanently deleted.`, danger: true });
-                              if (ok) removeGalleryPhoto(p.id);
+                              if (ok) { removeGalleryPhoto(p.id); toast("Photo deleted.", "danger"); }
                             }}
                           />
                         </div>
@@ -180,7 +183,7 @@ export function AdminGallery() {
                       tone="danger"
                       onClick={async () => {
                               const ok = await confirm({ title: "Remove photo?", message: `"${p.caption || "This photo"}" will be permanently deleted.`, danger: true });
-                              if (ok) removeGalleryPhoto(p.id);
+                              if (ok) { removeGalleryPhoto(p.id); toast("Photo deleted.", "danger"); }
                             }}
                     />
                   </div>

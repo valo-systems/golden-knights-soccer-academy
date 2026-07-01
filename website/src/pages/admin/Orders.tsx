@@ -31,6 +31,7 @@ import {
   Modal,
   formatDate,
   useConfirm,
+  useToast,
 } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -72,6 +73,7 @@ const emptyProductForm: ProductForm = {
 export function AdminOrders() {
   const { products, orders, addProduct, updateProduct, removeProduct, updateOrderStatus, removeOrder } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const [tab, setTab] = useState<Tab>("inventory");
   const [draft, setDraft] = useState<ProductForm | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -98,6 +100,7 @@ export function AdminOrders() {
     if (!draft) return;
     if (draft.id) {
       updateProduct(productFromForm(draft));
+      toast("Item updated.");
     } else {
       addProduct({
         name: draft.name,
@@ -109,6 +112,7 @@ export function AdminOrders() {
         variantMode: draft.variantMode,
         stockQty: Number(draft.stockQty) || 0,
       });
+      toast("Item added to shop.");
     }
     closeForm();
   }
@@ -168,14 +172,18 @@ export function AdminOrders() {
               message: `"${p?.name ?? "This item"}" will be permanently removed from the shop.`,
               danger: true,
             });
-            if (ok) removeProduct(id);
+            if (ok) { removeProduct(id); toast("Item removed.", "danger"); }
           }}
         />
       ) : (
         <OrdersView
           orders={orders}
           onOpen={setSelectedOrderId}
-          onStatus={updateOrderStatus}
+          onStatus={(id, status) => {
+              updateOrderStatus(id, status);
+              const labels: Record<string, string> = { paid: "Order marked paid.", fulfilled: "Order fulfilled.", cancelled: "Order cancelled.", pending: "Order reopened." };
+              toast(labels[status] ?? "Order updated.", status === "cancelled" ? "danger" : "success");
+            }}
           onRemove={async (id) => {
             const o = orders.find((x) => x.id === id);
             const ok = await confirm({
@@ -183,7 +191,7 @@ export function AdminOrders() {
               message: `Order ${o?.orderNumber ?? id} will be permanently deleted.`,
               danger: true,
             });
-            if (ok) removeOrder(id);
+            if (ok) { removeOrder(id); toast("Order deleted.", "danger"); }
           }}
         />
       )}
@@ -210,7 +218,11 @@ export function AdminOrders() {
         {selectedOrder && (
           <OrderDetail
             order={selectedOrder}
-            onStatus={(status) => updateOrderStatus(selectedOrder.id, status)}
+            onStatus={(status) => {
+              updateOrderStatus(selectedOrder.id, status);
+              const labels: Record<string, string> = { paid: "Order marked paid.", fulfilled: "Order fulfilled.", cancelled: "Order cancelled.", pending: "Order reopened." };
+              toast(labels[status] ?? "Order updated.", status === "cancelled" ? "danger" : "success");
+            }}
           />
         )}
       </Modal>

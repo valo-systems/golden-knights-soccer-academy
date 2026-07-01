@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CalendarDays, Plus, Trophy, Trash2, Pencil } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { AGE_GROUPS, type AgeGroup, matchOutcome, type Match } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm, useToast } from "@/components/admin/ui";
 import { Select, DatePicker } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -17,6 +17,7 @@ const OUTCOME_CLS: Record<string, string> = {
 export function AdminMatches() {
   const { matches, addMatch, updateMatch, removeMatch } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -82,8 +83,8 @@ export function AdminMatches() {
       gf: mode === "played" ? Number(gf) : undefined,
       ga: mode === "played" ? Number(ga) : undefined,
     };
-    if (editingId) updateMatch(editingId, payload);
-    else addMatch(payload);
+    if (editingId) { updateMatch(editingId, payload); toast("Match updated."); }
+    else { addMatch(payload); toast("Match added."); }
     close();
   }
 
@@ -120,7 +121,7 @@ export function AdminMatches() {
                 message: `${m ? `${m.team} vs ${m.opponent} on ${m.date}` : "This match"} will be permanently removed.`,
                 danger: true,
               });
-              if (ok) removeMatch(id);
+              if (ok) { removeMatch(id); toast("Match removed.", "danger"); }
             }}
           />
           <MatchTable
@@ -136,7 +137,7 @@ export function AdminMatches() {
                 message: `${m ? `${m.team} vs ${m.opponent} on ${m.date}` : "This match"} will be permanently removed.`,
                 danger: true,
               });
-              if (ok) removeMatch(id);
+              if (ok) { removeMatch(id); toast("Match removed.", "danger"); }
             }}
           />
         </div>

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link2, Newspaper, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { NEWS_CATEGORIES, type NewsCategory, type NewsPost } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm, useToast } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export function AdminNews() {
   const { newsPosts, addNewsPost, updateNewsPost, removeNewsPost } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export function AdminNews() {
         body: body as unknown as string[],
         img: img || undefined,
       });
+      toast("Post updated.");
     } else {
       addNewsPost({
         title: title.trim(),
@@ -73,6 +75,7 @@ export function AdminNews() {
         body,
         img: img || undefined,
       });
+      toast("Post published.");
     }
     close();
   }
@@ -147,7 +150,7 @@ export function AdminNews() {
                           <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
                           <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={async () => {
                               const ok = await confirm({ title: "Remove post?", message: `"${p.title}" will be permanently deleted.`, danger: true });
-                              if (ok) removeNewsPost(p.id);
+                              if (ok) { removeNewsPost(p.id); toast("Post deleted.", "danger"); }
                             }} />
                         </div>
                       </td>
@@ -184,7 +187,7 @@ export function AdminNews() {
                     <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
                     <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={async () => {
                               const ok = await confirm({ title: "Remove post?", message: `"${p.title}" will be permanently deleted.`, danger: true });
-                              if (ok) removeNewsPost(p.id);
+                              if (ok) { removeNewsPost(p.id); toast("Post deleted.", "danger"); }
                             }} />
                   </div>
                 </article>

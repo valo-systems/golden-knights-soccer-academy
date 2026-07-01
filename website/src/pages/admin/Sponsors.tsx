@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAdmin, type NewSponsor } from "@/admin/store";
 import type { Sponsor } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, useConfirm } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, useConfirm, useToast } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ function sponsorToForm(s: Sponsor): NewSponsor {
 export function AdminSponsors() {
   const { sponsors, addSponsor, updateSponsor, removeSponsor } = useAdmin();
   const confirm = useConfirm();
+  const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -93,8 +94,10 @@ export function AdminSponsors() {
     if (!form.name.trim()) return;
     if (editingId) {
       updateSponsor(editingId, { ...form, name: form.name.trim() });
+      toast("Sponsor updated.");
     } else {
       addSponsor({ ...form, name: form.name.trim() });
+      toast("Sponsor added.");
     }
     close();
   }
@@ -126,7 +129,7 @@ export function AdminSponsors() {
             sponsors={approved}
             empty="No approved sponsors yet."
             onEdit={startEdit}
-            onApprove={(id) => updateSponsor(id, { status: "approved" })}
+            onApprove={(id) => { updateSponsor(id, { status: "approved" }); toast("Sponsor approved."); }}
             onRemove={async (id) => {
               const s = sponsors.find((x) => x.id === id);
               const ok = await confirm({
@@ -134,7 +137,7 @@ export function AdminSponsors() {
                 message: `"${s?.name ?? "This sponsor"}" will be permanently removed.`,
                 danger: true,
               });
-              if (ok) removeSponsor(id);
+              if (ok) { removeSponsor(id); toast("Sponsor removed.", "danger"); }
             }}
           />
           <SponsorTable
@@ -143,7 +146,7 @@ export function AdminSponsors() {
             sponsors={pending}
             empty="No pending sponsors."
             onEdit={startEdit}
-            onApprove={(id) => updateSponsor(id, { status: "approved" })}
+            onApprove={(id) => { updateSponsor(id, { status: "approved" }); toast("Sponsor approved."); }}
             onRemove={async (id) => {
               const s = sponsors.find((x) => x.id === id);
               const ok = await confirm({
@@ -151,7 +154,7 @@ export function AdminSponsors() {
                 message: `"${s?.name ?? "This sponsor"}" will be permanently removed.`,
                 danger: true,
               });
-              if (ok) removeSponsor(id);
+              if (ok) { removeSponsor(id); toast("Sponsor removed.", "danger"); }
             }}
           />
         </div>
