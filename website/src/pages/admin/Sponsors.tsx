@@ -8,11 +8,10 @@ import {
   Plus,
   Trash2,
   Upload,
-  X,
 } from "lucide-react";
 import { useAdmin, type NewSponsor } from "@/admin/store";
 import type { Sponsor } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, useConfirm } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
@@ -50,6 +49,7 @@ function sponsorToForm(s: Sponsor): NewSponsor {
 
 export function AdminSponsors() {
   const { sponsors, addSponsor, updateSponsor, removeSponsor } = useAdmin();
+  const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -127,7 +127,15 @@ export function AdminSponsors() {
             empty="No approved sponsors yet."
             onEdit={startEdit}
             onApprove={(id) => updateSponsor(id, { status: "approved" })}
-            onRemove={removeSponsor}
+            onRemove={async (id) => {
+              const s = sponsors.find((x) => x.id === id);
+              const ok = await confirm({
+                title: "Remove sponsor?",
+                message: `"${s?.name ?? "This sponsor"}" will be permanently removed.`,
+                danger: true,
+              });
+              if (ok) removeSponsor(id);
+            }}
           />
           <SponsorTable
             title="Pending"
@@ -136,7 +144,15 @@ export function AdminSponsors() {
             empty="No pending sponsors."
             onEdit={startEdit}
             onApprove={(id) => updateSponsor(id, { status: "approved" })}
-            onRemove={removeSponsor}
+            onRemove={async (id) => {
+              const s = sponsors.find((x) => x.id === id);
+              const ok = await confirm({
+                title: "Remove sponsor?",
+                message: `"${s?.name ?? "This sponsor"}" will be permanently removed.`,
+                danger: true,
+              });
+              if (ok) removeSponsor(id);
+            }}
           />
         </div>
       )}

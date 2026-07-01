@@ -34,6 +34,7 @@ import {
   RenewalBadge,
   WhatsAppLink,
   formatDate,
+  useConfirm,
   waLink,
 } from "@/components/admin/ui";
 import { Select as MenuSelect, DatePicker } from "@/components/admin/controls";
@@ -63,6 +64,7 @@ const emptyMember = {
 
 export function AdminMembers() {
   const { members, fees, addMember, updateMember, removeMember, recordPayment, updatePhotoConsent } = useAdmin();
+  const confirm = useConfirm();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [adding, setAdding] = useState(false);
@@ -209,7 +211,15 @@ export function AdminMembers() {
           members={filtered}
           onOpen={setSelectedId}
           onEdit={openEdit}
-          onRemove={removeMember}
+          onRemove={async (id) => {
+            const m = members.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove member?",
+              message: `${m ? `${m.firstName} ${m.lastName}` : "This member"} will be permanently removed, including all payment history.`,
+              danger: true,
+            });
+            if (ok) removeMember(id);
+          }}
           onRecordPayment={recordPayment}
           onAdd={() => setAdding(true)}
         />
@@ -218,7 +228,15 @@ export function AdminMembers() {
           members={filtered}
           onOpen={setSelectedId}
           onEdit={openEdit}
-          onRemove={removeMember}
+          onRemove={async (id) => {
+            const m = members.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove member?",
+              message: `${m ? `${m.firstName} ${m.lastName}` : "This member"} will be permanently removed, including all payment history.`,
+              danger: true,
+            });
+            if (ok) removeMember(id);
+          }}
           onRecordPayment={recordPayment}
           onAdd={() => setAdding(true)}
         />

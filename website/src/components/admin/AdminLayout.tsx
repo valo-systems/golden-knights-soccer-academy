@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/admin/auth";
 import { useAdmin } from "@/admin/store";
+import { ConfirmProvider, useConfirm } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -31,8 +32,17 @@ const NAV = [
 ];
 
 export function AdminLayout() {
+  return (
+    <ConfirmProvider>
+      <AdminLayoutInner />
+    </ConfirmProvider>
+  );
+}
+
+function AdminLayoutInner() {
   const { isAuthed, email, signOut } = useAuth();
   const { reset } = useAdmin();
+  const confirm = useConfirm();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -84,8 +94,14 @@ export function AdminLayout() {
           <Settings className="size-4" /> Settings
         </NavLink>
         <button
-          onClick={() => {
-            if (confirm("Reset all demo data to the seed?")) reset();
+          onClick={async () => {
+            const ok = await confirm({
+              title: "Reset demo data?",
+              message: "This will wipe all current data and restore the original seed. This cannot be undone.",
+              confirmLabel: "Reset",
+              danger: true,
+            });
+            if (ok) reset();
           }}
           className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-white/60 transition-colors hover:bg-white/10 hover:text-white"
         >

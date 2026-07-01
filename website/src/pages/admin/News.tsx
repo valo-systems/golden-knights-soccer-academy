@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link2, Newspaper, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { NEWS_CATEGORIES, type NewsCategory, type NewsPost } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, formatDate } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 export function AdminNews() {
   const { newsPosts, addNewsPost, updateNewsPost, removeNewsPost } = useAdmin();
+  const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -144,7 +145,10 @@ export function AdminNews() {
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
-                          <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={() => removeNewsPost(p.id)} />
+                          <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={async () => {
+                              const ok = await confirm({ title: "Remove post?", message: `"${p.title}" will be permanently deleted.`, danger: true });
+                              if (ok) removeNewsPost(p.id);
+                            }} />
                         </div>
                       </td>
                     </tr>
@@ -178,7 +182,10 @@ export function AdminNews() {
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
-                    <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={() => removeNewsPost(p.id)} />
+                    <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={async () => {
+                              const ok = await confirm({ title: "Remove post?", message: `"${p.title}" will be permanently deleted.`, danger: true });
+                              if (ok) removeNewsPost(p.id);
+                            }} />
                   </div>
                 </article>
               ))}

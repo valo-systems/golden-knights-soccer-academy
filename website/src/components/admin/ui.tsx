@@ -1,10 +1,126 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageCircle, X } from "lucide-react";
+import { AlertTriangle, MessageCircle, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RenewalState } from "@/admin/store";
 import { type ProspectStatus, PROSPECT_STATUS_LABEL } from "@/admin/types";
+
+// ─── Confirm dialog ──────────────────────────────────────────────────────────
+
+type ConfirmOptions = {
+  title?: string;
+  message: string;
+  confirmLabel?: string;
+  danger?: boolean;
+};
+
+type ConfirmContextValue = (opts: ConfirmOptions) => Promise<boolean>;
+
+const ConfirmContext = createContext<ConfirmContextValue | null>(null);
+
+export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<(ConfirmOptions & { open: boolean }) | null>(null);
+  const resolveRef = useRef<(v: boolean) => void>(() => {});
+
+  const confirm = useCallback((opts: ConfirmOptions) => {
+    return new Promise<boolean>((resolve) => {
+      resolveRef.current = resolve;
+      setState({ ...opts, open: true });
+    });
+  }, []);
+
+  function respond(yes: boolean) {
+    setState(null);
+    resolveRef.current(yes);
+  }
+
+  return (
+    <ConfirmContext.Provider value={confirm}>
+      {children}
+      <AnimatePresence>
+        {state?.open && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+            <motion.div
+              className="absolute inset-0 bg-[#0c0d10]/50 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => respond(false)}
+            />
+            <motion.div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="confirm-title"
+              aria-describedby="confirm-message"
+              initial={{ opacity: 0, scale: 0.94, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 6 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="admin-pop relative w-full max-w-sm rounded-3xl p-6"
+            >
+              <div className="mb-4 flex items-start gap-4">
+                <span className={cn(
+                  "flex size-11 shrink-0 items-center justify-center rounded-2xl",
+                  state.danger ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"
+                )}>
+                  <AlertTriangle className="size-5" />
+                </span>
+                <div className="pt-0.5">
+                  <p id="confirm-title" className="font-heading text-lg font-black text-foreground">
+                    {state.title ?? (state.danger ? "Delete?" : "Are you sure?")}
+                  </p>
+                  <p id="confirm-message" className="mt-1 text-sm text-muted-foreground">
+                    {state.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => respond(false)}
+                  className="rounded-full border border-[#e7e2dc] bg-white px-5 py-2.5 text-sm font-semibold text-[#34363d] transition hover:bg-[#f8f5f2]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => respond(true)}
+                  className={cn(
+                    "rounded-full px-5 py-2.5 text-sm font-semibold text-white transition",
+                    state.danger
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-[#111217] hover:bg-[#2a2c35]"
+                  )}
+                >
+                  {state.confirmLabel ?? (state.danger ? "Delete" : "Confirm")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </ConfirmContext.Provider>
+  );
+}
+
+export function useConfirm() {
+  const ctx = useContext(ConfirmContext);
+  if (!ctx) throw new Error("useConfirm must be used inside <ConfirmProvider>");
+  return ctx;
+}
+
+// ─── Page header ─────────────────────────────────────────────────────────────
 
 /** Page header with a title, optional subtitle, and right-aligned actions. */
 export function AdminHeader({

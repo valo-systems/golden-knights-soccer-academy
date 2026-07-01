@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { getPendingOrders, useAdmin } from "@/admin/store";
+
 import type { AdminOrder } from "@/admin/types";
 import {
   CATEGORIES,
@@ -29,6 +30,7 @@ import {
   Card,
   Modal,
   formatDate,
+  useConfirm,
 } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -69,6 +71,7 @@ const emptyProductForm: ProductForm = {
 
 export function AdminOrders() {
   const { products, orders, addProduct, updateProduct, removeProduct, updateOrderStatus, removeOrder } = useAdmin();
+  const confirm = useConfirm();
   const [tab, setTab] = useState<Tab>("inventory");
   const [draft, setDraft] = useState<ProductForm | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -154,13 +157,34 @@ export function AdminOrders() {
       </Card>
 
       {tab === "inventory" ? (
-        <InventoryView products={products} onEdit={openEdit} onRemove={removeProduct} onAdd={openAdd} />
+        <InventoryView
+          products={products}
+          onEdit={openEdit}
+          onAdd={openAdd}
+          onRemove={async (id) => {
+            const p = products.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove item?",
+              message: `"${p?.name ?? "This item"}" will be permanently removed from the shop.`,
+              danger: true,
+            });
+            if (ok) removeProduct(id);
+          }}
+        />
       ) : (
         <OrdersView
           orders={orders}
           onOpen={setSelectedOrderId}
           onStatus={updateOrderStatus}
-          onRemove={removeOrder}
+          onRemove={async (id) => {
+            const o = orders.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove order?",
+              message: `Order ${o?.orderNumber ?? id} will be permanently deleted.`,
+              danger: true,
+            });
+            if (ok) removeOrder(id);
+          }}
         />
       )}
 

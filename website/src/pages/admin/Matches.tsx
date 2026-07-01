@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CalendarDays, Plus, Trophy, Trash2, Pencil } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { AGE_GROUPS, type AgeGroup, matchOutcome, type Match } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal, formatDate } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, formatDate, useConfirm } from "@/components/admin/ui";
 import { Select, DatePicker } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -16,6 +16,7 @@ const OUTCOME_CLS: Record<string, string> = {
 
 export function AdminMatches() {
   const { matches, addMatch, updateMatch, removeMatch } = useAdmin();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -112,7 +113,15 @@ export function AdminMatches() {
             matches={fixtures}
             empty="No fixtures yet."
             onEdit={startEdit}
-            onRemove={removeMatch}
+            onRemove={async (id) => {
+              const m = matches.find((x) => x.id === id);
+              const ok = await confirm({
+                title: "Remove match?",
+                message: `${m ? `${m.team} vs ${m.opponent} on ${m.date}` : "This match"} will be permanently removed.`,
+                danger: true,
+              });
+              if (ok) removeMatch(id);
+            }}
           />
           <MatchTable
             title="Recent results"
@@ -120,7 +129,15 @@ export function AdminMatches() {
             matches={results}
             empty="No results yet."
             onEdit={startEdit}
-            onRemove={removeMatch}
+            onRemove={async (id) => {
+              const m = matches.find((x) => x.id === id);
+              const ok = await confirm({
+                title: "Remove match?",
+                message: `${m ? `${m.team} vs ${m.opponent} on ${m.date}` : "This match"} will be permanently removed.`,
+                danger: true,
+              });
+              if (ok) removeMatch(id);
+            }}
           />
         </div>
       )}

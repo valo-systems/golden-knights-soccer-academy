@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { ChevronDown, ChevronUp, ImagePlus, Link2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { GALLERY_CATEGORIES, type GalleryCategory, type GalleryPhoto } from "@/admin/types";
-import { AdminHeader, AdminIconButton, Card, Modal } from "@/components/admin/ui";
+import { AdminHeader, AdminIconButton, Card, Modal, useConfirm } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 export function AdminGallery() {
   const { galleryPhotos, addGalleryPhoto, updateGalleryPhoto, removeGalleryPhoto, moveGalleryPhoto } = useAdmin();
+  const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -126,7 +127,10 @@ export function AdminGallery() {
                             label="Remove"
                             icon={Trash2}
                             tone="danger"
-                            onClick={() => removeGalleryPhoto(p.id)}
+                            onClick={async () => {
+                              const ok = await confirm({ title: "Remove photo?", message: `"${p.caption || "This photo"}" will be permanently deleted.`, danger: true });
+                              if (ok) removeGalleryPhoto(p.id);
+                            }}
                           />
                         </div>
                       </td>
@@ -174,7 +178,10 @@ export function AdminGallery() {
                       label="Remove"
                       icon={Trash2}
                       tone="danger"
-                      onClick={() => removeGalleryPhoto(p.id)}
+                      onClick={async () => {
+                              const ok = await confirm({ title: "Remove photo?", message: `"${p.caption || "This photo"}" will be permanently deleted.`, danger: true });
+                              if (ok) removeGalleryPhoto(p.id);
+                            }}
                     />
                   </div>
                 </article>

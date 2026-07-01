@@ -30,6 +30,7 @@ import {
   Modal,
   WhatsAppLink,
   formatDate,
+  useConfirm,
   waLink,
 } from "@/components/admin/ui";
 import { Select, DatePicker } from "@/components/admin/controls";
@@ -72,6 +73,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 export function AdminProspects() {
   const { prospects, addProspect, setProspectStatus, addProspectNote, convertProspect, removeProspect } =
     useAdmin();
+  const confirm = useConfirm();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [adding, setAdding] = useState(false);
@@ -200,7 +202,15 @@ export function AdminProspects() {
           onOpen={setSelectedId}
           onStatus={setProspectStatus}
           onConvert={convert}
-          onRemove={removeProspect}
+          onRemove={async (id) => {
+            const p = prospects.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove enquiry?",
+              message: `${p ? prospectName(p) : "This enquiry"} will be permanently removed.`,
+              danger: true,
+            });
+            if (ok) removeProspect(id);
+          }}
           onAdd={() => setAdding(true)}
         />
 
@@ -209,7 +219,15 @@ export function AdminProspects() {
           onOpen={setSelectedId}
           onStatus={setProspectStatus}
           onConvert={convert}
-          onRemove={removeProspect}
+          onRemove={async (id) => {
+            const p = prospects.find((x) => x.id === id);
+            const ok = await confirm({
+              title: "Remove enquiry?",
+              message: `${p ? prospectName(p) : "This enquiry"} will be permanently removed.`,
+              danger: true,
+            });
+            if (ok) removeProspect(id);
+          }}
           onAdd={() => setAdding(true)}
         />
       </Card>
