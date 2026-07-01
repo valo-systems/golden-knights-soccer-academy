@@ -8,6 +8,7 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Trash2,
   UserCheck,
   UserPlus,
   type LucideIcon,
@@ -69,7 +70,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 export function AdminProspects() {
-  const { prospects, addProspect, setProspectStatus, addProspectNote, convertProspect } =
+  const { prospects, addProspect, setProspectStatus, addProspectNote, convertProspect, removeProspect } =
     useAdmin();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -199,6 +200,8 @@ export function AdminProspects() {
           onOpen={setSelectedId}
           onStatus={setProspectStatus}
           onConvert={convert}
+          onRemove={removeProspect}
+          onAdd={() => setAdding(true)}
         />
 
         <ProspectMobileCards
@@ -206,6 +209,8 @@ export function AdminProspects() {
           onOpen={setSelectedId}
           onStatus={setProspectStatus}
           onConvert={convert}
+          onRemove={removeProspect}
+          onAdd={() => setAdding(true)}
         />
       </Card>
 
@@ -307,7 +312,7 @@ export function AdminProspects() {
                     <p className="mt-1 text-xs text-[#6b6f76]">{formatDate(n.at)}</p>
                   </div>
                 ))}
-                {selected.notes.length === 0 && <EmptyState />}
+                {selected.notes.length === 0 && <EmptyState message="No notes yet." />}
               </div>
               <form onSubmit={saveNote} className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Input
@@ -438,11 +443,15 @@ function ProspectTable({
   onOpen,
   onStatus,
   onConvert,
+  onRemove,
+  onAdd,
 }: {
   prospects: Prospect[];
   onOpen: (id: string) => void;
   onStatus: (id: string, status: ProspectStatus) => void;
   onConvert: (id: string) => void;
+  onRemove: (id: string) => void;
+  onAdd: () => void;
 }) {
   return (
     <div className="hidden overflow-x-auto lg:block">
@@ -483,13 +492,14 @@ function ProspectTable({
                   onOpen={() => onOpen(prospect.id)}
                   onStatus={(status) => onStatus(prospect.id, status)}
                   onConvert={() => onConvert(prospect.id)}
+                  onRemove={() => onRemove(prospect.id)}
                 />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {prospects.length === 0 && <EmptyState />}
+      {prospects.length === 0 && <EmptyState onAdd={onAdd} />}
     </div>
   );
 }
@@ -499,11 +509,15 @@ function ProspectMobileCards({
   onOpen,
   onStatus,
   onConvert,
+  onRemove,
+  onAdd,
 }: {
   prospects: Prospect[];
   onOpen: (id: string) => void;
   onStatus: (id: string, status: ProspectStatus) => void;
   onConvert: (id: string) => void;
+  onRemove: (id: string) => void;
+  onAdd: () => void;
 }) {
   return (
     <div className="space-y-3 p-4 lg:hidden">
@@ -542,11 +556,12 @@ function ProspectMobileCards({
               onOpen={() => onOpen(prospect.id)}
               onStatus={(status) => onStatus(prospect.id, status)}
               onConvert={() => onConvert(prospect.id)}
+              onRemove={() => onRemove(prospect.id)}
             />
           </div>
         </article>
       ))}
-      {prospects.length === 0 && <EmptyState />}
+      {prospects.length === 0 && <EmptyState onAdd={onAdd} />}
     </div>
   );
 }
@@ -556,11 +571,13 @@ function ProspectActions({
   onOpen,
   onStatus,
   onConvert,
+  onRemove,
 }: {
   prospect: Prospect;
   onOpen: () => void;
   onStatus: (status: ProspectStatus) => void;
   onConvert: () => void;
+  onRemove: () => void;
 }) {
   const next = nextAction(prospect, onStatus, onConvert);
   return (
@@ -584,6 +601,7 @@ function ProspectActions({
         />
       )}
       <AdminIconButton label="View details" icon={Eye} onClick={onOpen} />
+      <AdminIconButton label="Remove prospect" icon={Trash2} tone="danger" onClick={onRemove} />
     </AdminActionGroup>
   );
 }
@@ -653,11 +671,20 @@ function nextStepText(prospect: Prospect) {
   return "Closed";
 }
 
-function EmptyState() {
+function EmptyState({ onAdd, message }: { onAdd?: () => void; message?: string }) {
   return (
-    <div className="m-4 rounded-2xl border border-dashed border-[#d9d2ca] bg-[#fbfaf8] p-6 text-center">
-      <p className="text-sm font-bold text-[#111217]">No enquiries found.</p>
-      <p className="mt-1 text-xs text-[#6b6f76]">Try a different search or filter.</p>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-sm font-bold text-[#111217]">
+        {message ?? "No enquiries yet."}
+      </p>
+      {!message && (
+        <p className="mt-1 text-xs text-[#6b6f76]">Add a prospect or wait for a trial form submission.</p>
+      )}
+      {onAdd && (
+        <Button type="button" onClick={onAdd} className="mt-5">
+          <Plus /> Add prospect
+        </Button>
+      )}
     </div>
   );
 }

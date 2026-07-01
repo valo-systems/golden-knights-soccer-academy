@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { Calendar, ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
+import { Calendar, ArrowLeft, ArrowUpRight, ArrowRight, Newspaper } from "lucide-react";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { FilterTabs } from "@/components/ui/filter-tabs";
@@ -75,11 +75,38 @@ export function News() {
             active={cat}
             onChange={setCat}
           />
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {shown.map((p, i) => (
-              <PostCard key={p.slug + i} post={p} i={i} />
-            ))}
-          </div>
+          {shown.length === 0 ? (
+            <div className="mt-8 flex flex-col items-center gap-6 rounded-3xl border border-border bg-card px-8 py-20 text-center">
+              <span className="flex size-16 items-center justify-center rounded-full bg-accent">
+                <Newspaper className="size-7 text-primary" />
+              </span>
+              <div>
+                <h3 className="text-xl font-black text-foreground">
+                  {cat === "All" ? "No posts yet." : `Nothing in "${cat}" yet.`}
+                </h3>
+                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                  {cat === "All"
+                    ? "The academy will be sharing news, match reports, and updates here soon. Check back after the next match day."
+                    : "Try a different category or check back soon — the coaches post regularly."}
+                </p>
+              </div>
+              {cat !== "All" ? (
+                <Button variant="outline" onClick={() => setCat("All")}>
+                  View all posts
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to="/register">Book a trial</Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {shown.map((p, i) => (
+                <PostCard key={p.slug + i} post={p} i={i} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>

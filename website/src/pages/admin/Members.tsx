@@ -6,8 +6,10 @@ import {
   Download,
   Eye,
   MessageCircle,
+  Pencil,
   Plus,
   Search,
+  Trash2,
 } from "lucide-react";
 import { downloadCsv } from "@/admin/csv";
 import {
@@ -60,10 +62,11 @@ const emptyMember = {
 };
 
 export function AdminMembers() {
-  const { members, fees, addMember, recordPayment, updatePhotoConsent } = useAdmin();
+  const { members, fees, addMember, updateMember, removeMember, recordPayment, updatePhotoConsent } = useAdmin();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<MemberFilter>("all");
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyMember);
   const paymentFollowUps = useMemo(
@@ -114,13 +117,36 @@ export function AdminMembers() {
 
   const selected = members.find((member) => member.id === selectedId) ?? null;
 
+  function openEdit(member: Member) {
+    setEditingId(member.id);
+    setForm({
+      firstName: member.firstName,
+      lastName: member.lastName,
+      dob: member.dob ?? "",
+      team: member.team,
+      guardianName: member.guardianName,
+      guardianPhone: member.guardianPhone,
+      guardianEmail: member.guardianEmail ?? "",
+    });
+    setAdding(true);
+  }
+
   function submit(e: FormEvent) {
     e.preventDefault();
-    addMember({
-      ...form,
-      dob: form.dob || undefined,
-      guardianEmail: form.guardianEmail || undefined,
-    });
+    if (editingId) {
+      updateMember(editingId, {
+        ...form,
+        dob: form.dob || undefined,
+        guardianEmail: form.guardianEmail || undefined,
+      });
+      setEditingId(null);
+    } else {
+      addMember({
+        ...form,
+        dob: form.dob || undefined,
+        guardianEmail: form.guardianEmail || undefined,
+      });
+    }
     setForm(emptyMember);
     setAdding(false);
   }
@@ -182,17 +208,23 @@ export function AdminMembers() {
         <DesktopMemberTable
           members={filtered}
           onOpen={setSelectedId}
+          onEdit={openEdit}
+          onRemove={removeMember}
           onRecordPayment={recordPayment}
+          onAdd={() => setAdding(true)}
         />
 
         <MobileMemberCards
           members={filtered}
           onOpen={setSelectedId}
+          onEdit={openEdit}
+          onRemove={removeMember}
           onRecordPayment={recordPayment}
+          onAdd={() => setAdding(true)}
         />
       </Card>
 
-      <Modal title="Add member" open={adding} onClose={() => setAdding(false)}>
+      <Modal title={editingId ? "Edit member" : "Add member"} open={adding} onClose={() => { setAdding(false); setEditingId(null); setForm(emptyMember); }}>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="First name" required>
@@ -263,7 +295,7 @@ export function AdminMembers() {
             </div>
           </div>
           <Button type="submit" size="lg" className="w-full">
-            Save member
+            {editingId ? "Save changes" : "Save member"}
           </Button>
         </form>
       </Modal>
@@ -381,11 +413,17 @@ function FilterChips({
 function DesktopMemberTable({
   members,
   onOpen,
+  onEdit,
+  onRemove,
   onRecordPayment,
+  onAdd,
 }: {
   members: Member[];
   onOpen: (id: string) => void;
+  onEdit: (m: Member) => void;
+  onRemove: (id: string) => void;
   onRecordPayment: (id: string) => void;
+  onAdd: () => void;
 }) {
   return (
     <div className="hidden overflow-x-auto lg:block">
@@ -398,7 +436,7 @@ function DesktopMemberTable({
             <th className="px-4 py-3">Payment</th>
             <th className="px-4 py-3">Monthly fee</th>
             <th className="px-4 py-3">Photo</th>
-            <th className="sticky right-0 bg-[#fbfaf8] px-4 py-3 text-right">Action</th>
+            <th className="sticky right-0 bg-[#fbfaf8] px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#eee8e2]">
@@ -407,13 +445,15 @@ function DesktopMemberTable({
               key={member.id}
               member={member}
               onOpen={() => onOpen(member.id)}
+              onEdit={() => onEdit(member)}
+              onRemove={() => onRemove(member.id)}
               onRecordPayment={() => onRecordPayment(member.id)}
             />
           ))}
         </tbody>
       </table>
 
-      {members.length === 0 && <EmptyState />}
+      {members.length === 0 && <EmptyState onAdd={onAdd} />}
     </div>
   );
 }
@@ -421,10 +461,14 @@ function DesktopMemberTable({
 function MemberRow({
   member,
   onOpen,
+  onEdit,
+  onRemove,
   onRecordPayment,
 }: {
   member: Member;
   onOpen: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
   onRecordPayment: () => void;
 }) {
   const state = renewalState(member);
@@ -456,6 +500,8 @@ function MemberRow({
           member={member}
           state={state}
           onOpen={onOpen}
+          onEdit={onEdit}
+          onRemove={onRemove}
           onRecordPayment={onRecordPayment}
         />
       </td>
@@ -476,36 +522,24 @@ function DesktopRowAction({
   member,
   state,
   onOpen,
+  onEdit,
+  onRemove,
   onRecordPayment,
 }: {
   member: Member;
   state: RenewalState;
   onOpen: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
   onRecordPayment: () => void;
 }) {
-  if (state === "inactive") {
-    return (
-      <AdminActionGroup>
-        <AdminIconButton label="View member" icon={Eye} onClick={onOpen} />
-      </AdminActionGroup>
-    );
-  }
-
   return (
     <AdminActionGroup>
-      {isPaymentFollowUp(member) ? (
-        <AdminIconButton
-          label="Record payment"
-          icon={CreditCard}
-          tone="primary"
-          onClick={onRecordPayment}
-        />
-      ) : (
-        <AdminIconButton label="View member" icon={Eye} onClick={onOpen} />
+      {isPaymentFollowUp(member) && state !== "inactive" && (
+        <AdminIconButton label="Record payment" icon={CreditCard} tone="primary" onClick={onRecordPayment} />
       )}
-      {isPaymentFollowUp(member) && (
-        <AdminIconButton label="View member" icon={Eye} onClick={onOpen} />
-      )}
+      <AdminIconButton label="View member" icon={Eye} onClick={onOpen} />
+      <AdminIconButton label="Edit member" icon={Pencil} onClick={onEdit} />
       <AdminIconLink
         href={waLink(member.guardianPhone)}
         target="_blank"
@@ -514,6 +548,7 @@ function DesktopRowAction({
         icon={MessageCircle}
         label={`WhatsApp ${member.guardianName}`}
       />
+      <AdminIconButton label="Remove member" icon={Trash2} tone="danger" onClick={onRemove} />
     </AdminActionGroup>
   );
 }
@@ -521,11 +556,17 @@ function DesktopRowAction({
 function MobileMemberCards({
   members,
   onOpen,
+  onEdit,
+  onRemove,
   onRecordPayment,
+  onAdd,
 }: {
   members: Member[];
   onOpen: (id: string) => void;
+  onEdit: (m: Member) => void;
+  onRemove: (id: string) => void;
   onRecordPayment: (id: string) => void;
+  onAdd: () => void;
 }) {
   return (
     <div className="space-y-3 p-4 lg:hidden">
@@ -534,11 +575,13 @@ function MobileMemberCards({
           key={member.id}
           member={member}
           onOpen={() => onOpen(member.id)}
+          onEdit={() => onEdit(member)}
+          onRemove={() => onRemove(member.id)}
           onRecordPayment={() => onRecordPayment(member.id)}
         />
       ))}
 
-      {members.length === 0 && <EmptyState />}
+      {members.length === 0 && <EmptyState onAdd={onAdd} />}
     </div>
   );
 }
@@ -546,10 +589,14 @@ function MobileMemberCards({
 function MemberCard({
   member,
   onOpen,
+  onEdit,
+  onRemove,
   onRecordPayment,
 }: {
   member: Member;
   onOpen: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
   onRecordPayment: () => void;
 }) {
   const state = renewalState(member);
@@ -591,14 +638,10 @@ function MemberCard({
       <div className="mt-4 border-t border-[#eee8e2] pt-3">
         <AdminActionGroup>
           {isPaymentFollowUp(member) && (
-            <AdminIconButton
-              label="Record payment"
-              icon={CreditCard}
-              tone="primary"
-              onClick={onRecordPayment}
-            />
+            <AdminIconButton label="Record payment" icon={CreditCard} tone="primary" onClick={onRecordPayment} />
           )}
           <AdminIconButton label="View member" icon={Eye} onClick={onOpen} />
+          <AdminIconButton label="Edit member" icon={Pencil} onClick={onEdit} />
           <AdminIconLink
             href={waLink(member.guardianPhone)}
             target="_blank"
@@ -607,17 +650,21 @@ function MemberCard({
             icon={MessageCircle}
             label={`WhatsApp ${member.guardianName}`}
           />
+          <AdminIconButton label="Remove member" icon={Trash2} tone="danger" onClick={onRemove} />
         </AdminActionGroup>
       </div>
     </article>
   );
 }
 
-function EmptyState() {
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="m-4 rounded-2xl border border-dashed border-[#d9d2ca] bg-[#fbfaf8] p-6 text-center">
-      <p className="text-sm font-bold text-[#111217]">No members found.</p>
-      <p className="mt-1 text-xs text-[#6b6f76]">Try a different search or filter.</p>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-sm font-bold text-[#111217]">No members yet.</p>
+      <p className="mt-1 text-xs text-[#6b6f76]">Add your first player to get started.</p>
+      <Button type="button" onClick={onAdd} className="mt-5">
+        <Plus /> Add member
+      </Button>
     </div>
   );
 }

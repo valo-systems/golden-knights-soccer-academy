@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Link2, Newspaper, Plus, Trash2, Upload } from "lucide-react";
+import { Link2, Newspaper, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useAdmin } from "@/admin/store";
-import { NEWS_CATEGORIES, type NewsCategory } from "@/admin/types";
+import { NEWS_CATEGORIES, type NewsCategory, type NewsPost } from "@/admin/types";
 import { AdminHeader, AdminIconButton, Card, Modal, formatDate } from "@/components/admin/ui";
 import { Select } from "@/components/admin/controls";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
 export function AdminNews() {
-  const { newsPosts, addNewsPost, removeNewsPost } = useAdmin();
+  const { newsPosts, addNewsPost, updateNewsPost, removeNewsPost } = useAdmin();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [adding, setAdding] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<NewsCategory>("Academy news");
@@ -31,27 +32,54 @@ export function AdminNews() {
 
   const canSubmit = title.trim() && excerpt.trim() && body.trim();
 
+  function openAdd() {
+    setEditingId(null);
+    setTitle(""); setCategory("Academy news"); setDate("");
+    setExcerpt(""); setBody(""); setImg(""); setImgMode("upload");
+    setOpen(true);
+  }
+
+  function startEdit(p: NewsPost) {
+    setEditingId(p.id);
+    setTitle(p.title);
+    setCategory(p.category);
+    setDate(typeof p.date === "string" ? p.date : "");
+    setExcerpt(p.excerpt);
+    setBody(Array.isArray(p.body) ? p.body.join("\n\n") : (p.body as string));
+    setImg(p.img ?? "");
+    setImgMode(p.img?.startsWith("data:") ? "upload" : "url");
+    setOpen(true);
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    addNewsPost({
-      title: title.trim(),
-      category,
-      date: date.trim() || undefined,
-      excerpt: excerpt.trim(),
-      body,
-      img: img || undefined,
-    });
+    if (editingId) {
+      updateNewsPost(editingId, {
+        title: title.trim(),
+        category,
+        date: date.trim() || undefined,
+        excerpt: excerpt.trim(),
+        body: body as unknown as string[],
+        img: img || undefined,
+      });
+    } else {
+      addNewsPost({
+        title: title.trim(),
+        category,
+        date: date.trim() || undefined,
+        excerpt: excerpt.trim(),
+        body,
+        img: img || undefined,
+      });
+    }
     close();
   }
 
   function close() {
-    setAdding(false);
-    setTitle("");
-    setDate("");
-    setExcerpt("");
-    setBody("");
-    setImg("");
+    setOpen(false);
+    setEditingId(null);
+    setTitle(""); setDate(""); setExcerpt(""); setBody(""); setImg("");
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -61,7 +89,7 @@ export function AdminNews() {
         title="News"
         subtitle="Write posts that appear on the public News page."
         actions={
-          <Button type="button" onClick={() => setAdding(true)}>
+          <Button type="button" onClick={openAdd}>
             <Plus /> Add post
           </Button>
         }
@@ -69,7 +97,7 @@ export function AdminNews() {
 
       <Card className="overflow-hidden border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
         {newsPosts.length === 0 ? (
-          <EmptyState onAdd={() => setAdding(true)} />
+          <EmptyState onAdd={openAdd} />
         ) : (
           <>
             {/* desktop table */}
@@ -114,12 +142,10 @@ export function AdminNews() {
                         {p.date || formatDate(p.createdAt)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <AdminIconButton
-                          label="Remove post"
-                          icon={Trash2}
-                          tone="danger"
-                          onClick={() => removeNewsPost(p.id)}
-                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
+                          <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={() => removeNewsPost(p.id)} />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -150,12 +176,10 @@ export function AdminNews() {
                       <span className="text-xs text-[#9a9690]">{p.date || formatDate(p.createdAt)}</span>
                     </div>
                   </div>
-                  <AdminIconButton
-                    label="Remove post"
-                    icon={Trash2}
-                    tone="danger"
-                    onClick={() => removeNewsPost(p.id)}
-                  />
+                  <div className="flex shrink-0 gap-1">
+                    <AdminIconButton label="Edit post" icon={Pencil} onClick={() => startEdit(p)} />
+                    <AdminIconButton label="Remove post" icon={Trash2} tone="danger" onClick={() => removeNewsPost(p.id)} />
+                  </div>
                 </article>
               ))}
             </div>
@@ -163,7 +187,7 @@ export function AdminNews() {
         )}
       </Card>
 
-      <Modal title="New post" open={adding} onClose={close}>
+      <Modal title={editingId ? "Edit post" : "New post"} open={open} onClose={close}>
         <form onSubmit={submit} className="space-y-4">
           <Field label="Title" required>
             <Input
@@ -245,7 +269,7 @@ export function AdminNews() {
           </div>
 
           <Button type="submit" size="lg" className="w-full" disabled={!canSubmit}>
-            Publish post
+            {editingId ? "Save changes" : "Publish post"}
           </Button>
         </form>
       </Modal>

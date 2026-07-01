@@ -194,7 +194,16 @@ interface AdminContextValue extends AdminData {
     body: string;
     img?: string;
   }) => void;
+  updateNewsPost: (
+    id: string,
+    patch: Partial<Pick<NewsPost, "title" | "category" | "date" | "excerpt" | "body" | "img">>
+  ) => void;
   removeNewsPost: (id: string) => void;
+  updateMember: (id: string, patch: Partial<Pick<Member, "firstName" | "lastName" | "dob" | "team" | "guardianName" | "guardianPhone" | "guardianEmail" | "photoConsent">>) => void;
+  removeMember: (id: string) => void;
+  removeProspect: (id: string) => void;
+  removeProduct: (id: number) => void;
+  removeOrder: (id: string) => void;
   reset: () => void;
 }
 
@@ -527,8 +536,26 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           };
           return { ...d, newsPosts: [post, ...d.newsPosts] };
         }),
+      updateNewsPost: (id, patch) =>
+        setData((d) => ({
+          ...d,
+          newsPosts: d.newsPosts.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+        })),
       removeNewsPost: (id) =>
         setData((d) => ({ ...d, newsPosts: d.newsPosts.filter((p) => p.id !== id) })),
+      updateMember: (id, patch) =>
+        setData((d) => ({
+          ...d,
+          members: d.members.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+        })),
+      removeMember: (id) =>
+        setData((d) => ({ ...d, members: d.members.filter((m) => m.id !== id) })),
+      removeProspect: (id) =>
+        setData((d) => ({ ...d, prospects: d.prospects.filter((p) => p.id !== id) })),
+      removeProduct: (id) =>
+        setData((d) => ({ ...d, products: d.products.filter((p) => p.id !== id) })),
+      removeOrder: (id) =>
+        setData((d) => ({ ...d, orders: d.orders.filter((o) => o.id !== id) })),
       updatePhotoConsent: (memberId, consent) =>
         setData((d) => ({
           ...d,

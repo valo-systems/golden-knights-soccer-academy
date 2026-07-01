@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Instagram, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { X, Instagram, ArrowUpRight, ShieldCheck, ImageOff } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { PageHero } from "@/components/ui/page-hero";
 import { Coverflow } from "@/components/ui/coverflow";
@@ -72,15 +72,45 @@ export function Gallery() {
             />
           </div>
 
-          <Coverflow
-            key={filter}
-            items={shown.map((p) => ({ src: p.src, caption: p.caption }))}
-            onOpen={(i) => setActive(shown[i]?.src ?? null)}
-          />
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Drag, use the arrows, or tap a photo to enlarge.
-          </p>
+          {shown.length === 0 ? (
+            <div className="flex flex-col items-center gap-6 rounded-3xl border border-border bg-card px-8 py-20 text-center">
+              <span className="flex size-16 items-center justify-center rounded-full bg-accent">
+                <ImageOff className="size-7 text-primary" />
+              </span>
+              <div>
+                <h3 className="text-xl font-black text-foreground">
+                  {filter === "All" ? "No photos yet." : `No "${filter}" photos yet.`}
+                </h3>
+                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                  {filter === "All"
+                    ? "The academy gallery will be updated regularly. Follow us on Instagram in the meantime."
+                    : "Try a different category or come back after the next match day."}
+                </p>
+              </div>
+              {filter !== "All" ? (
+                <Button variant="outline" onClick={() => setFilter("All")}>
+                  View all photos
+                </Button>
+              ) : (
+                <Button asChild size="lg">
+                  <a href={SITE.instagram} target="_blank" rel="noreferrer">
+                    Follow on Instagram <ArrowUpRight className="size-4" />
+                  </a>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              <Coverflow
+                key={filter}
+                items={shown.map((p) => ({ src: p.src, caption: p.caption }))}
+                onOpen={(i) => setActive(shown[i]?.src ?? null)}
+              />
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                Drag, use the arrows, or tap a photo to enlarge.
+              </p>
+            </>
+          )}
         </div>
       </section>
 

@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ShoppingBag } from "lucide-react";
 import { useAdmin } from "@/admin/store";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { SortSelect } from "@/components/ui/sort-select";
 import { ProductTile } from "@/components/shop/ProductTile";
+import { Button } from "@/components/ui/button";
 import { CATEGORIES, type Category } from "@/data/products";
 import { formatZAR } from "@/lib/utils";
 
@@ -65,44 +66,71 @@ export function Shop() {
           </div>
 
           {/* grid */}
-          <div className="mt-10 grid grid-cols-2 gap-5 lg:grid-cols-4">
-            {products.map((p, i) => {
-              const inStock = p.variants.some((v) => v.stock_qty > 0);
-              return (
-                <Reveal key={p.id} delay={i % 4}>
-                  <Link to={`/shop/${p.slug}`} className="group block">
-                    <div className="relative overflow-hidden rounded-3xl">
-                      <ProductTile
-                        tone={p.tone}
-                        photo={p.photo}
-                        alt={p.name}
-                        className="aspect-square w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                      {!inStock && (
-                        <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-3 py-1 text-xs font-semibold text-white">
-                          Out of stock
+          {products.length === 0 ? (
+            <div className="mt-10 flex flex-col items-center gap-6 rounded-3xl border border-border bg-card px-8 py-20 text-center">
+              <span className="flex size-16 items-center justify-center rounded-full bg-accent">
+                <ShoppingBag className="size-7 text-primary" />
+              </span>
+              <div>
+                <h3 className="text-xl font-black text-foreground">
+                  {cat === "all" ? "Shop coming soon." : "Nothing in this category yet."}
+                </h3>
+                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                  {cat === "all"
+                    ? "Official GKSA kit and merchandise will be available here. In the meantime, contact the academy directly to enquire about uniforms."
+                    : "Try browsing all items — there may be something in another category for you."}
+                </p>
+              </div>
+              {cat !== "all" ? (
+                <Button variant="outline" onClick={() => setCat("all")}>
+                  Browse all items
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to="/contact">Contact us</Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="mt-10 grid grid-cols-2 gap-5 lg:grid-cols-4">
+              {products.map((p, i) => {
+                const inStock = p.variants.some((v) => v.stock_qty > 0);
+                return (
+                  <Reveal key={p.id} delay={i % 4}>
+                    <Link to={`/shop/${p.slug}`} className="group block">
+                      <div className="relative overflow-hidden rounded-3xl">
+                        <ProductTile
+                          tone={p.tone}
+                          photo={p.photo}
+                          alt={p.name}
+                          className="aspect-square w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                        />
+                        {!inStock && (
+                          <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-3 py-1 text-xs font-semibold text-white">
+                            Out of stock
+                          </span>
+                        )}
+                        <span className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 transition-opacity group-hover:opacity-100">
+                          <ArrowUpRight className="size-4" />
                         </span>
-                      )}
-                      <span className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 transition-opacity group-hover:opacity-100">
-                        <ArrowUpRight className="size-4" />
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-foreground">{p.name}</p>
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                          {p.category}
+                      </div>
+                      <div className="mt-3 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-foreground">{p.name}</p>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                            {p.category}
+                          </p>
+                        </div>
+                        <p className="font-heading text-lg font-black text-primary">
+                          {formatZAR(p.price_cents)}
                         </p>
                       </div>
-                      <p className="font-heading text-lg font-black text-primary">
-                        {formatZAR(p.price_cents)}
-                      </p>
-                    </div>
-                  </Link>
-                </Reveal>
-              );
-            })}
-          </div>
+                    </Link>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </>

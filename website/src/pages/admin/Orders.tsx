@@ -9,6 +9,7 @@ import {
   Plus,
   RotateCcw,
   ShoppingBag,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { getPendingOrders, useAdmin } from "@/admin/store";
@@ -67,7 +68,7 @@ const emptyProductForm: ProductForm = {
 };
 
 export function AdminOrders() {
-  const { products, orders, addProduct, updateProduct, updateOrderStatus } = useAdmin();
+  const { products, orders, addProduct, updateProduct, removeProduct, updateOrderStatus, removeOrder } = useAdmin();
   const [tab, setTab] = useState<Tab>("inventory");
   const [draft, setDraft] = useState<ProductForm | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -153,12 +154,13 @@ export function AdminOrders() {
       </Card>
 
       {tab === "inventory" ? (
-        <InventoryView products={products} onEdit={openEdit} />
+        <InventoryView products={products} onEdit={openEdit} onRemove={removeProduct} onAdd={openAdd} />
       ) : (
         <OrdersView
           orders={orders}
           onOpen={setSelectedOrderId}
           onStatus={updateOrderStatus}
+          onRemove={removeOrder}
         />
       )}
 
@@ -195,10 +197,28 @@ export function AdminOrders() {
 function InventoryView({
   products,
   onEdit,
+  onRemove,
+  onAdd,
 }: {
   products: Product[];
   onEdit: (product: Product) => void;
+  onRemove: (id: number) => void;
+  onAdd: () => void;
 }) {
+  if (products.length === 0) {
+    return (
+      <Card className="border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm font-bold text-[#111217]">No items in the shop yet.</p>
+          <p className="mt-1 text-xs text-[#6b6f76]">Add your first product to get started.</p>
+          <Button type="button" onClick={onAdd} className="mt-5">
+            <Plus /> Add item
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
       <div className="hidden overflow-x-auto lg:block">
@@ -245,12 +265,10 @@ function InventoryView({
                   <ProductStatus active={product.active !== false} />
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <AdminIconButton
-                    label="Edit item"
-                    icon={Pencil}
-                    data-product-edit={product.id}
-                    onClick={() => onEdit(product)}
-                  />
+                  <div className="flex items-center justify-end gap-1">
+                    <AdminIconButton label="Edit item" icon={Pencil} data-product-edit={product.id} onClick={() => onEdit(product)} />
+                    <AdminIconButton label="Remove item" icon={XCircle} tone="danger" onClick={() => onRemove(product.id)} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -285,15 +303,20 @@ function InventoryView({
               <StockText product={product} />
               <ProductStatus active={product.active !== false} />
             </div>
+            <div className="mt-4 flex gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="mt-4 w-full"
+              className="flex-1"
               onClick={() => onEdit(product)}
             >
               Edit
             </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => onRemove(product.id)}>
+              <XCircle className="size-4" />
+            </Button>
+            </div>
           </article>
         ))}
       </div>
@@ -305,12 +328,25 @@ function OrdersView({
   orders,
   onOpen,
   onStatus,
+  onRemove,
 }: {
   orders: AdminOrder[];
   onOpen: (id: string) => void;
   onStatus: (id: string, status: AdminOrder["status"]) => void;
+  onRemove: (id: string) => void;
 }) {
   const totalPending = getPendingOrders(orders).reduce((sum, order) => sum + order.totalCents, 0);
+
+  if (orders.length === 0) {
+    return (
+      <Card className="border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm font-bold text-[#111217]">No orders yet.</p>
+          <p className="mt-1 text-xs text-[#6b6f76]">Orders placed through the shop will appear here.</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden border-[#e7e2dc] bg-white shadow-[0_16px_42px_rgba(17,18,23,0.05)]">
@@ -354,6 +390,7 @@ function OrdersView({
                     order={order}
                     onOpen={() => onOpen(order.id)}
                     onStatus={(status) => onStatus(order.id, status)}
+                    onRemove={() => onRemove(order.id)}
                   />
                 </td>
               </tr>
@@ -369,11 +406,13 @@ function OrderActions({
   order,
   onOpen,
   onStatus,
+  onRemove,
   showView = true,
 }: {
   order: AdminOrder;
   onOpen: () => void;
   onStatus: (status: AdminOrder["status"]) => void;
+  onRemove?: () => void;
   showView?: boolean;
 }) {
   const hasLifecycleAction =
@@ -416,6 +455,7 @@ function OrderActions({
         />
       )}
       {showView && <AdminIconButton label="View order" icon={Eye} onClick={onOpen} />}
+      {onRemove && <AdminIconButton label="Remove order" icon={Trash2} tone="danger" onClick={onRemove} />}
     </AdminActionGroup>
   );
 }
