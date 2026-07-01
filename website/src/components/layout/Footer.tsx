@@ -101,7 +101,12 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>
-          <p>Proudly developing youth football in Midrand since {SITE.founded}.</p>
+          <div className="flex items-center gap-4">
+            <p>Proudly developing youth football in Midrand since {SITE.founded}.</p>
+            <Link to="/admin/login" className="transition-colors hover:text-white/60">
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -10,6 +10,7 @@ import {
   HeartHandshake,
   Star,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/ui/page-hero";
@@ -18,6 +19,8 @@ import { SectionHeading, Eyebrow } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { SPONSOR_TIERS, STATS, CONTACTS } from "@/data/site";
+import { useAdmin } from "@/admin/store";
+import type { Sponsor } from "@/admin/types";
 import { cn } from "@/lib/utils";
 
 const PROPOSAL = "/sponsorship-proposal.pdf";
@@ -168,7 +171,104 @@ function Tiers({ onChoose }: { onChoose: (tier: string) => void }) {
 }
 
 /* --------------------------------------------------------------- CURRENT PARTNERS */
+function SponsorCard({ sponsor, featured }: { sponsor: Sponsor; featured: boolean }) {
+  if (featured) {
+    return (
+      <Reveal>
+        <div className="overflow-hidden rounded-3xl border border-border bg-card">
+          <div className="grid lg:grid-cols-[1fr_1.4fr]">
+            <div className="flex items-center justify-center bg-white px-12 py-14">
+              {sponsor.logo ? (
+                <img
+                  src={sponsor.logo}
+                  alt={sponsor.name}
+                  loading="lazy"
+                  className="w-full max-w-[220px] object-contain"
+                />
+              ) : (
+                <div className="flex size-28 items-center justify-center rounded-2xl bg-secondary text-4xl font-black text-primary">
+                  {sponsor.name[0]}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col justify-center p-8 sm:p-10">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                <span className="size-1.5 rounded-full bg-primary" />
+                {sponsor.tagline || sponsor.tier}
+              </span>
+              <h3 className="mt-4 font-heading text-3xl font-black text-foreground">
+                {sponsor.name}
+              </h3>
+              {sponsor.description && (
+                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                  {sponsor.description}
+                </p>
+              )}
+              {sponsor.website && (
+                <a
+                  href={sponsor.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  Visit {sponsor.name} <ExternalLink className="size-4" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </Reveal>
+    );
+  }
+
+  return (
+    <Reveal>
+      <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center">
+        <div className="flex size-20 items-center justify-center rounded-2xl bg-white p-3 shadow-sm">
+          {sponsor.logo ? (
+            <img
+              src={sponsor.logo}
+              alt={sponsor.name}
+              loading="lazy"
+              className="max-h-full max-w-full object-contain"
+            />
+          ) : (
+            <span className="text-2xl font-black text-primary">{sponsor.name[0]}</span>
+          )}
+        </div>
+        <div>
+          <p className="font-heading text-lg font-black text-foreground">{sponsor.name}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-primary">
+            {sponsor.tagline || sponsor.tier}
+          </p>
+          {sponsor.description && (
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{sponsor.description}</p>
+          )}
+          {sponsor.website && (
+            <a
+              href={sponsor.website}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+            >
+              {sponsor.website.replace(/^https?:\/\/(www\.)?/, "")} <ExternalLink className="size-3" />
+            </a>
+          )}
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
 function CurrentPartners() {
+  const { sponsors } = useAdmin();
+  const approved = sponsors.filter((s) => s.status === "approved");
+  const [featured, ...rest] = approved;
+
+  const openTiers = ["Platinum", "Golden", "Silver"].filter(
+    (t) => !approved.some((s) => s.tier === t)
+  );
+
   return (
     <section className="bg-background py-24 sm:py-28">
       <div className="container-gk">
@@ -178,69 +278,46 @@ function CurrentPartners() {
           intro="These businesses invest in youth development and earn real, visible recognition at every session, match, and tournament."
         />
 
-        {/* Agape Water — featured partner card */}
-        <Reveal>
-          <div className="mt-12 overflow-hidden rounded-3xl border border-border bg-card">
-            <div className="grid lg:grid-cols-[1fr_1.4fr]">
-              {/* logo panel */}
-              <div className="flex items-center justify-center bg-white px-12 py-14">
-                <img
-                  src="/img/sponsors/agape-water-logo.png"
-                  alt="Agape Water"
-                  loading="lazy"
-                  className="w-full max-w-[220px]"
-                />
-              </div>
+        {approved.length === 0 && (
+          <Reveal>
+            <p className="mt-12 text-center text-muted-foreground">
+              Sponsorship positions are open. Download the proposal to get involved.
+            </p>
+          </Reveal>
+        )}
 
-              {/* detail panel */}
-              <div className="flex flex-col justify-center p-8 sm:p-10">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                  <span className="size-1.5 rounded-full bg-primary" />
-                  Official hydration partner
-                </span>
-                <h3 className="mt-4 font-heading text-3xl font-black text-foreground">
-                  Agape Water
-                </h3>
-                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                  Agape Water supplies premium mineral water to our players and coaching staff at
-                  every training session and match day. Keeping Golden Knights hydrated and
-                  performing at their best, from first whistle to final whistle.
-                </p>
-                <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-6 sm:grid-cols-3">
-                  {[
-                    { label: "Hydration", detail: "Every match day" },
-                    { label: "Training", detail: "Every session" },
-                    { label: "Tournaments", detail: "Full season" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <p className="text-sm font-bold text-foreground">{item.label}</p>
-                      <p className="text-xs text-muted-foreground">{item.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+        {/* featured (first approved) sponsor */}
+        {featured && <div className="mt-12">{<SponsorCard sponsor={featured} featured />}</div>}
+
+        {/* additional sponsors */}
+        {rest.length > 0 && (
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {rest.map((s) => (
+              <SponsorCard key={s.id} sponsor={s} featured={false} />
+            ))}
           </div>
-        </Reveal>
+        )}
 
         {/* open slots */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {["Platinum", "Golden", "Silver"].map((tier, i) => (
-            <Reveal key={tier} delay={i}>
-              <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40">
-                <div className="flex size-12 items-center justify-center rounded-2xl border border-dashed border-border">
-                  <span className="text-xl">+</span>
+        {openTiers.length > 0 && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {openTiers.map((tier, i) => (
+              <Reveal key={tier} delay={i}>
+                <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card px-6 py-10 text-center transition-colors hover:border-primary/40">
+                  <div className="flex size-12 items-center justify-center rounded-2xl border border-dashed border-border">
+                    <span className="text-xl">+</span>
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                      {tier} sponsor
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Your brand here</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-display text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                    {tier} sponsor
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Your brand here</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+              </Reveal>
+            ))}
+          </div>
+        )}
 
         {/* matchday photo strip */}
         <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">

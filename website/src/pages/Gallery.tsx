@@ -1,28 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Instagram, ArrowUpRight } from "lucide-react";
+import { X, Instagram, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { PageHero } from "@/components/ui/page-hero";
-import { Reveal } from "@/components/ui/reveal";
+import { Coverflow } from "@/components/ui/coverflow";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { Button } from "@/components/ui/button";
+import { useAdmin } from "@/admin/store";
+import { GALLERY_CATEGORIES } from "@/admin/types";
 import { SITE } from "@/data/site";
-import { cn } from "@/lib/utils";
 
-type Cat = "All" | "Match days" | "Training" | "Team";
-
-const PHOTOS: { src: string; cat: Exclude<Cat, "All"> }[] = [
-  { src: "/img/photos/academy-01.jpg", cat: "Match days" },
-  { src: "/img/photos/academy-02.jpg", cat: "Training" },
-  { src: "/img/photos/academy-03.webp", cat: "Team" },
-  { src: "/img/photos/academy-04.jpg", cat: "Training" },
-  { src: "/img/photos/academy-05.jpg", cat: "Match days" },
-  { src: "/img/photos/academy-06.webp", cat: "Team" },
-  { src: "/img/photos/academy-02.jpg", cat: "Match days" },
-  { src: "/img/photos/academy-04.jpg", cat: "Team" },
-  { src: "/img/photos/academy-01.jpg", cat: "Training" },
-];
-
-const CATS: Cat[] = ["All", "Match days", "Training", "Team"];
+const FILTERS = ["All", ...GALLERY_CATEGORIES] as const;
+type Filter = (typeof FILTERS)[number];
 
 export function Gallery() {
   usePageMeta({
@@ -31,9 +20,15 @@ export function Gallery() {
       "Photos from training sessions, match days, and academy life at Golden Knights Soccer Academy in Midrand.",
     path: "/gallery",
   });
-  const [cat, setCat] = useState<Cat>("All");
+
+  const { galleryPhotos } = useAdmin();
+  const [filter, setFilter] = useState<Filter>("All");
   const [active, setActive] = useState<string | null>(null);
-  const shown = cat === "All" ? PHOTOS : PHOTOS.filter((p) => p.cat === cat);
+
+  const shown = useMemo(
+    () => (filter === "All" ? galleryPhotos : galleryPhotos.filter((p) => p.category === filter)),
+    [galleryPhotos, filter]
+  );
 
   return (
     <>
@@ -47,50 +42,52 @@ export function Gallery() {
         subtitle="Training, match days, and the moments that make GKSA."
       />
 
+      {/* privacy notice */}
+      <section className="bg-secondary py-6">
+        <div className="container-gk">
+          <div className="flex items-start gap-3 rounded-2xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
+            <p>
+              <span className="font-semibold text-foreground">Your child's privacy matters.</span>{" "}
+              All photos are published with written parental consent and comply with the Protection
+              of Personal Information Act (POPIA). Images do not include full names or personal
+              details. To withdraw consent or request removal of a photo, contact us at{" "}
+              <a href="/contact" className="font-semibold text-primary hover:underline">
+                the academy
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* coverflow showcase */}
+      <section className="overflow-hidden bg-background py-16 sm:py-20">
+        <div className="container-gk">
+          <div className="mb-10 flex justify-center">
+            <FilterTabs
+              tabs={FILTERS.map((c) => ({ value: c, label: c }))}
+              active={filter}
+              onChange={setFilter}
+            />
+          </div>
+
+          <Coverflow
+            key={filter}
+            items={shown.map((p) => ({ src: p.src, caption: p.caption }))}
+            onOpen={(i) => setActive(shown[i]?.src ?? null)}
+          />
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Drag, use the arrows, or tap a photo to enlarge.
+          </p>
+        </div>
+      </section>
+
+      {/* instagram cta */}
       <section className="bg-background py-16 sm:py-20">
         <div className="container-gk">
-          {/* filters */}
-          <div className="flex flex-wrap gap-2">
-            {CATS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className={cn(
-                  "rounded-full px-5 py-2 text-sm font-semibold transition-colors",
-                  cat === c
-                    ? "bg-primary text-white"
-                    : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-
-          {/* grid */}
-          <div className="mt-8 columns-2 gap-4 md:columns-3 [&>*]:mb-4">
-            {shown.map((p, i) => (
-              <Reveal key={i} delay={i % 3}>
-                <button
-                  onClick={() => setActive(p.src)}
-                  className="group block w-full overflow-hidden rounded-2xl"
-                >
-                  <img
-                    src={p.src}
-                    alt={p.cat}
-                    loading="lazy"
-                    className={cn(
-                      "w-full object-cover transition-transform duration-500 group-hover:scale-105",
-                      i % 3 === 0 ? "aspect-[3/4]" : i % 3 === 1 ? "aspect-square" : "aspect-[4/5]"
-                    )}
-                  />
-                </button>
-              </Reveal>
-            ))}
-          </div>
-
-          {/* instagram cta */}
-          <div className="mt-14 flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-10 text-center">
+          <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-10 text-center">
             <Instagram className="size-8 text-primary" />
             <h2 className="text-2xl text-foreground">See more on Instagram</h2>
             <p className="max-w-md text-sm text-muted-foreground">

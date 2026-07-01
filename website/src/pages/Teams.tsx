@@ -1,9 +1,10 @@
-import { Trophy, CalendarDays } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Trophy, ArrowRight } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { PageHero } from "@/components/ui/page-hero";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const SQUADS = [
   { age: "U9", img: "/img/photos/academy-02.jpg", note: "Foundation phase" },
@@ -12,30 +13,24 @@ const SQUADS = [
   { age: "U13+", img: "/img/photos/academy-03.webp", note: "Performance phase" },
 ];
 
-type Fixture = { date: string; team: string; opp: string; venue: string };
-type Result = { date: string; team: string; result: string; opp: string };
-
-// Populated each season from the academy / SAFA North Rand FA.
-const FIXTURES: Fixture[] = [];
-const RESULTS: Result[] = [];
-
 export function Teams() {
   usePageMeta({
-    title: "Teams & Fixtures",
+    title: "Our Teams",
     description:
-      "Meet the Golden Knights squads. Fixtures, results, and league standings for our U9, U11, U13, and U13+ teams in the North Rand FA.",
+      "Meet the Golden Knights squads: U9, U11, U13, and U13+ teams developing young footballers in Midrand.",
     path: "/teams",
   });
+
   return (
     <>
       <PageHero
-        eyebrow="Teams & fixtures"
+        eyebrow="Our teams"
         title={
           <>
             Our <span className="text-primary">squads</span>
           </>
         }
-        subtitle="Meet the teams and follow every match through the season."
+        subtitle="Four age groups, one badge. Meet the teams developing the next generation."
         image="/img/photos/academy-05.jpg"
         imagePosition="top"
       />
@@ -77,93 +72,11 @@ export function Teams() {
           <p className="text-sm text-muted-foreground">
             Current leagues and competitions are confirmed each season.
           </p>
-        </div>
-      </section>
-
-      {/* fixtures + results */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="container-gk grid gap-12 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <SectionHeading eyebrow="Upcoming" title={<>Fixtures.</>} />
-            {FIXTURES.length === 0 ? (
-              <div className="mt-8 flex flex-col items-center gap-2 rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
-                <CalendarDays className="size-7 text-primary" />
-                <p className="font-semibold text-foreground">Fixtures coming soon</p>
-                <p className="max-w-xs text-sm text-muted-foreground">
-                  Upcoming games will be listed here once the season schedule is confirmed.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-8 overflow-hidden rounded-3xl border border-border">
-                {FIXTURES.map((f, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex items-center justify-between gap-3 px-5 py-4",
-                      i % 2 ? "bg-secondary" : "bg-card"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CalendarDays className="size-4 text-primary" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {f.team} vs {f.opp}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {f.date} · {f.venue}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      {f.team}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <SectionHeading eyebrow="Recent" title={<>Results.</>} />
-            {RESULTS.length === 0 ? (
-              <div className="mt-8 flex flex-col items-center gap-2 rounded-3xl border border-dashed border-border bg-card px-6 py-14 text-center">
-                <Trophy className="size-7 text-primary" />
-                <p className="font-semibold text-foreground">Results coming soon</p>
-                <p className="max-w-xs text-sm text-muted-foreground">
-                  Recent results will appear here as the teams play through the season.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-8 overflow-hidden rounded-3xl border border-border">
-                {RESULTS.map((r, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex items-center justify-between gap-3 px-5 py-4",
-                      i % 2 ? "bg-secondary" : "bg-card"
-                    )}
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {r.team} vs {r.opp}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{r.date}</p>
-                    </div>
-                    <span
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-bold",
-                        r.result.startsWith("W")
-                          ? "bg-primary text-white"
-                          : "bg-secondary text-foreground border border-border"
-                      )}
-                    >
-                      {r.result}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <Button asChild size="lg" className="mt-4">
+            <Link to="/fixtures">
+              See fixtures & results <ArrowRight />
+            </Link>
+          </Button>
         </div>
       </section>
     </>

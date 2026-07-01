@@ -2,15 +2,19 @@ import { useMemo, useState } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
+import { useAdmin } from "@/admin/store";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
+import { FilterTabs } from "@/components/ui/filter-tabs";
+import { SortSelect } from "@/components/ui/sort-select";
 import { ProductTile } from "@/components/shop/ProductTile";
-import { CATALOG, CATEGORIES, type Category } from "@/data/products";
-import { formatZAR, cn } from "@/lib/utils";
+import { CATEGORIES, type Category } from "@/data/products";
+import { formatZAR } from "@/lib/utils";
 
 type Sort = "featured" | "low" | "high";
 
 export function Shop() {
+  const { products: inventory } = useAdmin();
   usePageMeta({
     title: "Official Merchandise",
     description:
@@ -21,11 +25,12 @@ export function Shop() {
   const [sort, setSort] = useState<Sort>("featured");
 
   const products = useMemo(() => {
-    let list = cat === "all" ? CATALOG : CATALOG.filter((p) => p.category === cat);
+    const liveInventory = inventory.filter((p) => p.active !== false);
+    let list = cat === "all" ? liveInventory : liveInventory.filter((p) => p.category === cat);
     if (sort === "low") list = [...list].sort((a, b) => a.price_cents - b.price_cents);
     if (sort === "high") list = [...list].sort((a, b) => b.price_cents - a.price_cents);
     return list;
-  }, [cat, sort]);
+  }, [cat, inventory, sort]);
 
   return (
     <>
@@ -43,31 +48,20 @@ export function Shop() {
         <div className="container-gk">
           {/* controls */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setCat(c.value)}
-                  className={cn(
-                    "rounded-full px-5 py-2 text-sm font-semibold transition-colors",
-                    cat === c.value
-                      ? "bg-primary text-white"
-                      : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-            <select
+            <FilterTabs
+              tabs={CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+              active={cat}
+              onChange={setCat}
+            />
+            <SortSelect
+              options={[
+                { value: "featured", label: "Featured" },
+                { value: "low", label: "Price: low to high" },
+                { value: "high", label: "Price: high to low" },
+              ]}
               value={sort}
-              onChange={(e) => setSort(e.target.value as Sort)}
-              className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="featured">Featured</option>
-              <option value="low">Price: low to high</option>
-              <option value="high">Price: high to low</option>
-            </select>
+              onChange={setSort}
+            />
           </div>
 
           {/* grid */}

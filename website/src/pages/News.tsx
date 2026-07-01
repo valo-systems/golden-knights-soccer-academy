@@ -4,13 +4,14 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { Calendar, ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { Button } from "@/components/ui/button";
-import { POSTS, type Post } from "@/data/news";
-import { cn } from "@/lib/utils";
+import { useAdmin } from "@/admin/store";
+import type { NewsPost as NewsPostType } from "@/admin/types";
 
 const CATS = ["All", "Academy news", "Match reports", "Community", "Sponsors"] as const;
 
-function PostCard({ post, i }: { post: Post; i: number }) {
+function PostCard({ post, i }: { post: NewsPostType; i: number }) {
   return (
     <Reveal delay={i % 3}>
       <Link
@@ -53,8 +54,9 @@ export function News() {
       "Latest news, match reports, achievements, and announcements from Golden Knights Soccer Academy in Midrand.",
     path: "/news",
   });
+  const { newsPosts } = useAdmin();
   const [cat, setCat] = useState<(typeof CATS)[number]>("All");
-  const shown = cat === "All" ? POSTS : POSTS.filter((p) => p.category === cat);
+  const shown = cat === "All" ? newsPosts : newsPosts.filter((p) => p.category === cat);
   return (
     <>
       <PageHero
@@ -68,22 +70,11 @@ export function News() {
 
       <section className="bg-background py-16 sm:py-20">
         <div className="container-gk">
-          <div className="flex flex-wrap gap-2">
-            {CATS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className={cn(
-                  "rounded-full px-5 py-2 text-sm font-semibold transition-colors",
-                  cat === c
-                    ? "bg-primary text-white"
-                    : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <FilterTabs
+            tabs={CATS.map((c) => ({ value: c, label: c }))}
+            active={cat}
+            onChange={setCat}
+          />
           <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {shown.map((p, i) => (
               <PostCard key={p.slug + i} post={p} i={i} />
@@ -97,7 +88,8 @@ export function News() {
 
 export function NewsPost() {
   const { slug } = useParams();
-  const post = POSTS.find((p) => p.slug === slug);
+  const { newsPosts } = useAdmin();
+  const post = newsPosts.find((p) => p.slug === slug);
 
   usePageMeta(
     post
@@ -121,7 +113,7 @@ export function NewsPost() {
     );
   }
 
-  const more = POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const more = newsPosts.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
     <>

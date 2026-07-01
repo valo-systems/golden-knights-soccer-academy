@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SectionHeading, Eyebrow } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
+import { useAdmin } from "@/admin/store";
 import { STATS, SITE } from "@/data/site";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +34,6 @@ function Hero() {
         <img
           src="/img/photos/academy-01.jpg"
           alt="Golden Knights Soccer Academy players in action"
-          fetchPriority="high"
           className="h-full w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(12,13,16,0.96)_4%,rgba(12,13,16,0.45)_45%,rgba(12,13,16,0.75))]" />
@@ -260,6 +260,9 @@ function Programmes() {
 
 /* ---------------------------------------------------------- SPONSOR BAND */
 function SponsorBand() {
+  const { sponsors } = useAdmin();
+  const approved = sponsors.filter((s) => s.status === "approved");
+
   return (
     <section className="relative overflow-hidden bg-primary py-24 text-primary-foreground sm:py-28">
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-20" />
@@ -283,15 +286,27 @@ function SponsorBand() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {["Platinum", "Golden", "Silver", "Community", "In-kind", "Your brand"].map((t, i) => (
-            <Reveal key={t} delay={i}>
+          {approved.map((s, i) => (
+            <Reveal key={s.id} delay={i}>
+              <div className="flex aspect-video items-center justify-center rounded-2xl border border-white/25 bg-white p-3">
+                {s.logo ? (
+                  <img src={s.logo} alt={s.name} className="max-h-full max-w-full object-contain" />
+                ) : (
+                  <span className="font-display text-sm font-bold text-primary">{s.name}</span>
+                )}
+              </div>
+            </Reveal>
+          ))}
+          {/* open slots to fill the grid */}
+          {Array.from({ length: Math.max(0, 6 - approved.length) }).map((_, i) => (
+            <Reveal key={`slot-${i}`} delay={approved.length + i}>
               <div
                 className={cn(
                   "flex aspect-video items-center justify-center rounded-2xl border border-white/25 bg-white/10 px-3 text-center font-display text-sm font-semibold uppercase tracking-wide text-white/85 backdrop-blur",
-                  t === "Your brand" && "border-dashed border-white/60 text-white"
+                  i === Math.max(0, 6 - approved.length) - 1 && "border-dashed border-white/60 text-white"
                 )}
               >
-                {t}
+                Your brand
               </div>
             </Reveal>
           ))}
@@ -302,28 +317,12 @@ function SponsorBand() {
 }
 
 /* ------------------------------------------------------------ LATEST NEWS */
-const NEWS = [
-  {
-    title: "Welcome to the new Golden Knights website",
-    date: "June 2026",
-    category: "Academy news",
-    img: "/img/photos/academy-02.jpg",
-  },
-  {
-    title: "Golden Knights Soccer Academy aims high in Midrand",
-    date: "Featured",
-    category: "Community",
-    img: "/img/photos/academy-05.jpg",
-  },
-  {
-    title: "Thank you to the partners backing our players",
-    date: "2025/26 season",
-    category: "Sponsors",
-    img: "/img/photos/academy-03.webp",
-  },
-];
-
 function LatestNews() {
+  const { newsPosts } = useAdmin();
+  const posts = newsPosts.slice(0, 3);
+
+  if (posts.length === 0) return null;
+
   return (
     <section className="bg-background pt-24 sm:pt-28">
       <div className="container-gk">
@@ -343,10 +342,10 @@ function LatestNews() {
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {NEWS.map((post, i) => (
-            <Reveal key={post.title} delay={i}>
+          {posts.map((post, i) => (
+            <Reveal key={post.id} delay={i}>
               <Link
-                to="/news"
+                to={`/news/${post.slug}`}
                 className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition-shadow hover:shadow-xl"
               >
                 <div className="overflow-hidden">
@@ -378,6 +377,30 @@ function LatestNews() {
         </div>
       </div>
     </section>
+  );
+}
+
+function GalleryTeaser() {
+  const { galleryPhotos } = useAdmin();
+  const photos = galleryPhotos.slice(0, 4);
+  return (
+    <div className="mt-8 grid grid-cols-2 gap-3">
+      {photos.map((p, i) => (
+        <Reveal key={p.id} delay={i}>
+          <Link to="/gallery" className="group block overflow-hidden rounded-2xl">
+            <img
+              src={p.src}
+              alt={p.caption ?? "Academy gallery"}
+              loading="lazy"
+              className={cn(
+                "w-full object-cover transition-transform duration-500 group-hover:scale-105",
+                i % 3 === 0 ? "aspect-square" : "aspect-[4/3]"
+              )}
+            />
+          </Link>
+        </Reveal>
+      ))}
+    </div>
   );
 }
 
@@ -425,28 +448,7 @@ function NewsGalleryTeaser() {
               </Button>
             </Reveal>
           </div>
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {[
-              "/img/photos/academy-05.jpg",
-              "/img/photos/academy-06.webp",
-              "/img/photos/academy-03.webp",
-              "/img/photos/academy-02.jpg",
-            ].map((src, i) => (
-              <Reveal key={src} delay={i}>
-                <Link to="/gallery" className="group block overflow-hidden rounded-2xl">
-                  <img
-                    src={src}
-                    alt="Academy gallery"
-                    loading="lazy"
-                    className={cn(
-                      "w-full object-cover transition-transform duration-500 group-hover:scale-105",
-                      i % 3 === 0 ? "aspect-square" : "aspect-[4/3]"
-                    )}
-                  />
-                </Link>
-              </Reveal>
-            ))}
-          </div>
+          <GalleryTeaser />
         </div>
       </div>
     </section>
@@ -457,7 +459,7 @@ export function Home() {
   usePageMeta({
     title: "Youth Football Coaching in Midrand",
     description:
-      "Golden Knights Soccer Academy — quality youth football coaching in Midrand, Gauteng. Book a trial for U9–U13+ or become a sponsor today.",
+      "Golden Knights Soccer Academy, quality youth football coaching in Midrand, Gauteng. Book a trial for U9–U13+ or become a sponsor today.",
     path: "/",
   });
   return (

@@ -1,12 +1,12 @@
 /**
- * Mock product catalogue for the GKSA shop.
+ * Seed product catalogue for the GKSA shop.
  *
  * This mirrors the MySQL schema in ../../content/10-shop.md
  * (products / product_variants). Prices are stored in CENTS (integers)
  * exactly like the database, and formatted as ZAR for display.
  *
- * When the real backend is ready, replace the in-memory CATALOG with a
- * fetch() to the API and keep the same shapes.
+ * Admin state seeds from this list, then the public shop reads live inventory
+ * from admin state so demo edits can update the storefront immediately.
  */
 
 export type Category = "apparel" | "training" | "accessories";
@@ -25,9 +25,10 @@ export type Product = {
   description: string;
   category: Category;
   price_cents: number;
+  active?: boolean;
   /** visual tone for the branded product tile (fallback) */
   tone: "red" | "dark" | "light";
-  /** Pexels CDN photo URL — falls back to branded tile if omitted or fails to load */
+  /** Pexels CDN photo URL, falls back to branded tile if omitted or fails to load */
   photo?: string;
   variants: Variant[];
 };
@@ -59,6 +60,7 @@ export const CATALOG: Product[] = [
       "The official GKSA home jersey in academy red. Lightweight, breathable, and built for match day.",
     category: "apparel",
     price_cents: 45000,
+    active: true,
     tone: "red",
     photo:
       "https://images.pexels.com/photos/16678677/pexels-photo-16678677.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -71,6 +73,7 @@ export const CATALOG: Product[] = [
     description: "The official GKSA away jersey. Clean, sharp, and ready for the road.",
     category: "apparel",
     price_cents: 45000,
+    active: true,
     tone: "light",
     photo:
       "https://images.pexels.com/photos/33264686/pexels-photo-33264686.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -83,6 +86,7 @@ export const CATALOG: Product[] = [
     description: "Everyday training tee with the GKSA crest. Soft, durable, and comfortable.",
     category: "training",
     price_cents: 22000,
+    active: true,
     tone: "dark",
     photo:
       "https://images.pexels.com/photos/3794707/pexels-photo-3794707.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -95,6 +99,7 @@ export const CATALOG: Product[] = [
     description: "Full GKSA tracksuit, top and bottoms. Warm, smart, and team-ready.",
     category: "apparel",
     price_cents: 75000,
+    active: true,
     tone: "dark",
     photo:
       "https://images.pexels.com/photos/26887046/pexels-photo-26887046.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -107,6 +112,7 @@ export const CATALOG: Product[] = [
     description: "Heavyweight hoodie with an embroidered GKSA crest. A supporter favourite.",
     category: "apparel",
     price_cents: 52000,
+    active: true,
     tone: "red",
     photo:
       "https://images.pexels.com/photos/2108816/pexels-photo-2108816.png?auto=compress&cs=tinysrgb&w=800",
@@ -119,6 +125,7 @@ export const CATALOG: Product[] = [
     description: "Adjustable cap with the GKSA mark. One size fits all.",
     category: "accessories",
     price_cents: 18000,
+    active: true,
     tone: "light",
     photo:
       "https://images.pexels.com/photos/31162881/pexels-photo-31162881.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -131,6 +138,7 @@ export const CATALOG: Product[] = [
     description: "Lightweight drawstring bag for boots and kit. Branded GKSA red.",
     category: "accessories",
     price_cents: 12000,
+    active: true,
     tone: "red",
     photo:
       "https://images.pexels.com/photos/3850566/pexels-photo-3850566.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -143,6 +151,7 @@ export const CATALOG: Product[] = [
     description: "750ml reusable bottle to keep players hydrated through every session.",
     category: "accessories",
     price_cents: 9000,
+    active: true,
     tone: "dark",
     photo:
       "https://images.pexels.com/photos/7690201/pexels-photo-7690201.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -152,4 +161,10 @@ export const CATALOG: Product[] = [
 
 export function getProduct(slug: string) {
   return CATALOG.find((p) => p.slug === slug);
+}
+
+export function toneForCategory(category: Category): Product["tone"] {
+  if (category === "training") return "dark";
+  if (category === "accessories") return "light";
+  return "red";
 }

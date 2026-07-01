@@ -1,19 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Check, ShoppingBag, Truck, ShieldCheck } from "lucide-react";
+import { useAdmin } from "@/admin/store";
 import { Button } from "@/components/ui/button";
 import { ProductTile } from "@/components/shop/ProductTile";
-import { getProduct, CATALOG } from "@/data/products";
 import { useCart } from "@/shop/cart";
 import { formatZAR, cn } from "@/lib/utils";
 
 export function Product() {
   const { slug } = useParams();
-  const product = slug ? getProduct(slug) : undefined;
+  const { products } = useAdmin();
+  const liveProducts = products.filter((p) => p.active !== false);
+  const product = slug ? liveProducts.find((p) => p.slug === slug) : undefined;
   const { add } = useCart();
   const [variantId, setVariantId] = useState<number | null>(
     product ? (product.variants.find((v) => v.stock_qty > 0)?.id ?? null) : null
   );
+
+  useEffect(() => {
+    setVariantId(product ? (product.variants.find((v) => v.stock_qty > 0)?.id ?? null) : null);
+  }, [product?.id]);
 
   if (!product) {
     return (
@@ -27,7 +33,7 @@ export function Product() {
   }
 
   const variant = product.variants.find((v) => v.id === variantId) ?? null;
-  const related = CATALOG.filter(
+  const related = liveProducts.filter(
     (p) => p.id !== product.id && p.category === product.category
   ).slice(0, 4);
 

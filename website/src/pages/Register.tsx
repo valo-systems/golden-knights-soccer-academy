@@ -3,20 +3,14 @@ import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, ArrowLeft, CheckCircle2, ClipboardCheck, MessageCircle } from "lucide-react";
+import { useAdmin } from "@/admin/store";
+import { ageGroupFromDob } from "@/admin/types";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/ui/page-hero";
 import { StepProgress } from "@/components/ui/step-progress";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SITE } from "@/data/site";
-
-function ageGroupFromDob(dob: string): string {
-  if (!dob) return "";
-  const age = (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000);
-  if (age < 10) return "U9";
-  if (age < 12) return "U11";
-  if (age < 14) return "U13";
-  return "U13+";
-}
+import { formatZAR } from "@/lib/utils";
 
 type Data = {
   childFirst: string;
@@ -28,6 +22,7 @@ type Data = {
   email: string;
   heard: string;
   message: string;
+  photoConsent: boolean;
   consent: boolean;
 };
 
@@ -41,12 +36,14 @@ const EMPTY: Data = {
   email: "",
   heard: "",
   message: "",
+  photoConsent: false,
   consent: false,
 };
 
 const STEPS = ["Child", "Parent", "Trial"];
 
 export function Register() {
+  const { addProspect, fees } = useAdmin();
   usePageMeta({
     title: "Book a Trial",
     description:
@@ -108,6 +105,24 @@ export function Register() {
                     if (step < 2) {
                       next();
                     } else if (canNext) {
+                      const details = [
+                        d.position ? `Preferred position: ${d.position}` : "",
+                        d.heard ? `Heard about us via: ${d.heard}` : "",
+                        d.message,
+                      ]
+                        .filter(Boolean)
+                        .join("\n");
+                      addProspect({
+                        childFirst: d.childFirst,
+                        childLast: d.childLast,
+                        dob: d.dob,
+                        parentName: d.parentName,
+                        phone: d.phone,
+                        email: d.email || undefined,
+                        source: "Trial form",
+                        message: details || undefined,
+                        photoConsent: d.photoConsent,
+                      });
                       setSent(true);
                     }
                   }}
@@ -158,7 +173,7 @@ export function Register() {
                             <Field label="Suggested age group">
                               <Input
                                 readOnly
-                                value={ageGroupFromDob(d.dob)}
+                                value={ageGroupFromDob(d.dob) ?? ""}
                                 placeholder="Set by date of birth"
                               />
                             </Field>
@@ -229,6 +244,29 @@ export function Register() {
                               placeholder="Questions, preferred days, etc."
                             />
                           </Field>
+                          <div className="rounded-2xl border border-border bg-secondary p-4">
+                            <p className="font-bold text-foreground">Fees when joining</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {formatZAR(fees.monthlyFeeCents)} per month plus a once-off{" "}
+                              {formatZAR(fees.joiningFeeCents)} joining fee.
+                            </p>
+                          </div>
+                          <label className="flex items-start gap-3 rounded-2xl border border-border bg-secondary p-4 text-sm text-muted-foreground">
+                            <input
+                              type="checkbox"
+                              checked={d.photoConsent}
+                              onChange={(e) => set("photoConsent", e.target.checked)}
+                              className="mt-0.5 size-4 accent-[#ee3030]"
+                            />
+                            <span>
+                              <span className="font-semibold text-foreground">Photo consent (optional).</span>{" "}
+                              I give Golden Knights Soccer Academy permission to photograph and/or
+                              video my child during training sessions, matches, and academy events,
+                              and to publish these images on the academy website and social media.
+                              Images will not include full names or personal details. You can
+                              withdraw this consent at any time by contacting the academy.
+                            </span>
+                          </label>
                           <label className="flex items-start gap-3 text-sm text-muted-foreground">
                             <input
                               type="checkbox"
@@ -310,8 +348,10 @@ export function Register() {
             <div className="mt-6 flex items-start gap-3 rounded-2xl bg-secondary p-6">
               <ClipboardCheck className="mt-0.5 size-6 shrink-0 text-primary" />
               <p className="text-sm text-muted-foreground">
-                Fees are shared when we contact you. Financial assistance is available for players
-                who need support to take part.
+                Academy membership is {formatZAR(fees.monthlyFeeCents)} per month for all age
+                groups, plus a once-off {formatZAR(fees.joiningFeeCents)} joining fee when your
+                child joins. Online payment can be added in the future; for now, the academy
+                records payment in the admin portal.
               </p>
             </div>
           </div>

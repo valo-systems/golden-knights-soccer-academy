@@ -314,7 +314,7 @@ export function About() {
   usePageMeta({
     title: "About the Academy",
     description:
-      "Learn about Golden Knights Soccer Academy — our story, values, coaching staff, and commitment to developing young footballers in Midrand since 2016.",
+      "Learn about Golden Knights Soccer Academy, our story, values, coaching staff, and commitment to developing young footballers in Midrand since 2016.",
     path: "/about",
   });
   return (

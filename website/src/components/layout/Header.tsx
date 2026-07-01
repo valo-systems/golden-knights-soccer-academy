@@ -15,6 +15,7 @@ const DARK_HERO = new Set([
   "/sponsors",
   "/contact",
   "/teams",
+  "/fixtures",
   "/gallery",
   "/news",
   "/register",

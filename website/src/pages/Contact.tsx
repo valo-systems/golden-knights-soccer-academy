@@ -14,12 +14,21 @@ import { PageHero } from "@/components/ui/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { Field, Input, Textarea, Select } from "@/components/ui/field";
 import { CONTACTS, SITE } from "@/data/site";
+import { useAdmin } from "@/admin/store";
 
 const WHATSAPP = "https://wa.me/27781610670";
 const MAP_SRC = "https://www.google.com/maps?q=Midrand,Gauteng,South+Africa&output=embed";
 
 function ContactForm() {
+  const { addProspect } = useAdmin();
   const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    reason: "",
+    message: "",
+  });
   return (
     <div className="rounded-3xl border border-border bg-card p-7 sm:p-8">
       {sent ? (
@@ -34,23 +43,51 @@ function ContactForm() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            addProspect({
+              parentName: form.name,
+              phone: form.phone,
+              email: form.email || undefined,
+              source: "Contact",
+              message: [`Reason: ${form.reason || "General enquiry"}`, form.message]
+                .filter(Boolean)
+                .join("\n"),
+            });
             setSent(true);
           }}
           className="space-y-4"
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Name" required>
-              <Input required placeholder="Your name" />
+              <Input
+                required
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="Your name"
+              />
             </Field>
-            <Field label="Phone">
-              <Input placeholder="0xx xxx xxxx" />
+            <Field label="Phone" required>
+              <Input
+                required
+                value={form.phone}
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="0xx xxx xxxx"
+              />
             </Field>
           </div>
           <Field label="Email" required>
-            <Input type="email" required placeholder="you@email.com" />
+            <Input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              placeholder="you@email.com"
+            />
           </Field>
           <Field label="Reason">
-            <Select defaultValue="">
+            <Select
+              value={form.reason}
+              onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))}
+            >
               <option value="" disabled>
                 What is this about?
               </option>
@@ -60,7 +97,12 @@ function ContactForm() {
             </Select>
           </Field>
           <Field label="Message" required>
-            <Textarea required placeholder="How can we help?" />
+            <Textarea
+              required
+              value={form.message}
+              onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
+              placeholder="How can we help?"
+            />
           </Field>
           <Button type="submit" size="lg" className="w-full">
             Send message <ArrowRight />

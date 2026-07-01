@@ -14,22 +14,23 @@ export type NavItem = { label: string; to: string };
 export const PRIMARY_NAV: NavItem[] = [
   { label: "Programmes", to: "/programmes" },
   { label: "Teams", to: "/teams" },
-  { label: "About", to: "/about" },
-  { label: "Contact", to: "/contact" },
-];
-
-/** Secondary links tucked into the "More" menu. */
-export const MORE_NAV: NavItem[] = [
-  { label: "Gallery", to: "/gallery" },
   { label: "News", to: "/news" },
   { label: "Shop", to: "/shop" },
 ];
 
-/** Full list (used by the footer and mobile menu). */
+/** Secondary links tucked into the desktop "More" dropdown. */
+export const MORE_NAV: NavItem[] = [
+  { label: "Fixtures & Results", to: "/fixtures" },
+  { label: "Gallery", to: "/gallery" },
+  { label: "About", to: "/about" },
+  { label: "Contact", to: "/contact" },
+  { label: "Sponsors", to: "/sponsors" },
+];
+
+/** Full list used by the footer and mobile menu (no admin link). */
 export const NAV: NavItem[] = [
   { label: "Home", to: "/" },
   ...PRIMARY_NAV,
-  { label: "Sponsors", to: "/sponsors" },
   ...MORE_NAV,
 ];
 

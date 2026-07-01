@@ -5,15 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { ProductTile } from "@/components/shop/ProductTile";
 import { useCart } from "@/shop/cart";
+import { useAdmin } from "@/admin/store";
 import { formatZAR } from "@/lib/utils";
-
-function makeOrderNumber() {
-  const n = Math.floor(100000 + Math.random() * 900000);
-  return `GKSA-${new Date().getFullYear()}-${n}`;
-}
 
 export function Checkout() {
   const { items, subtotal_cents, clear } = useCart();
+  const { addOrder } = useAdmin();
+  const [name, setName] = useState("");
   const [order, setOrder] = useState<string | null>(null);
 
   // success screen
@@ -57,10 +55,20 @@ export function Checkout() {
 
   function placeOrder(e: React.FormEvent) {
     e.preventDefault();
-    // Mock order creation. With the real backend this POSTs to the API,
-    // writes to MySQL (orders + order_items), decrements stock, and returns
-    // the order number.
-    const num = makeOrderNumber();
+    // Records the order into the admin store so it shows in the Shop orders
+    // tab. With the real backend this POSTs to the API, writes to MySQL
+    // (orders + order_items), and decrements stock.
+    const num = addOrder({
+      customerName: name.trim() || "Online customer",
+      items: items.map((it) => ({
+        productId: it.productId,
+        productName: it.name,
+        variantLabel: it.variantLabel,
+        qty: it.qty,
+        unitCents: it.unit_cents,
+      })),
+      totalCents: subtotal_cents,
+    });
     setOrder(num);
     clear();
     window.scrollTo(0, 0);
@@ -79,7 +87,12 @@ export function Checkout() {
               </h2>
               <div className="mt-5 space-y-4">
                 <Field label="Full name" required>
-                  <Input required placeholder="Your name" />
+                  <Input
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                  />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Email" required>

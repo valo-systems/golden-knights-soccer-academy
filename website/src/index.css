@@ -10,7 +10,7 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #ffffff;
+  --background: #f9f8f5;
   --foreground: #15161a;
 
   --card: #ffffff;
@@ -19,10 +19,10 @@
   --primary: #ee3030;
   --primary-foreground: #ffffff;
 
-  --secondary: #f4f4f5;
+  --secondary: #f0ede8;
   --secondary-foreground: #15161a;
 
-  --muted: #f4f4f5;
+  --muted: #f0ede8;
   --muted-foreground: #5b5d66;
 
   --accent: #fbe4e4;
@@ -31,8 +31,8 @@
   --ink: #0c0d10; /* near-black for dark sections */
   --ink-soft: #16181d;
 
-  --border: #e6e6e9;
-  --input: #e6e6e9;
+  --border: #e4e0da;
+  --input: #e4e0da;
   --ring: #ee3030;
 }
 
@@ -138,5 +138,67 @@ html.lenis body {
   .mask-fade-b {
     -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+}
+
+/* ---------------------------------------------------------------
+   Admin portal, premium surfaces (Apple-like, calm and layered)
+----------------------------------------------------------------*/
+@layer utilities {
+  /* Soft, layered canvas instead of flat white */
+  .admin-canvas {
+    background-color: #f4f5f7;
+    background-image:
+      radial-gradient(45rem 30rem at 100% -8%, rgba(238, 48, 48, 0.07), transparent 60%),
+      radial-gradient(40rem 32rem at -10% 4%, rgba(48, 70, 140, 0.05), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  /* Frosted, elevated card */
+  .admin-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(17, 18, 23, 0.07);
+    box-shadow:
+      0 1px 2px rgba(17, 18, 23, 0.04),
+      0 12px 28px -16px rgba(17, 18, 23, 0.18);
+  }
+  .admin-card-hover {
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  .admin-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 2px rgba(17, 18, 23, 0.05),
+      0 22px 44px -22px rgba(17, 18, 23, 0.28);
+  }
+
+  /* Floating popover (dropdowns, calendar) */
+  .admin-pop {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(17, 18, 23, 0.08);
+    box-shadow:
+      0 12px 48px -12px rgba(17, 18, 23, 0.3),
+      0 2px 8px rgba(17, 18, 23, 0.08);
+  }
+
+  .admin-rise {
+    animation: admin-rise 0.45s cubic-bezier(0.21, 0.47, 0.32, 0.98) both;
+  }
+}
+
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

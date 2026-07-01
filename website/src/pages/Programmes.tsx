@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useAdmin } from "@/admin/store";
 import {
   ArrowRight,
   CalendarDays,
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/ui/page-hero";
 import { SectionHeading, Eyebrow } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
+import { formatZAR } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ HERO */
 function ProgrammesHero() {
@@ -189,6 +191,8 @@ function TypicalWeek() {
 
 /* ------------------------------------------------------------- HOW TO JOIN */
 function HowToJoin() {
+  const { fees } = useAdmin();
+
   return (
     <section className="bg-ink py-20 text-white sm:py-24">
       <div className="container-gk">
@@ -199,8 +203,9 @@ function HowToJoin() {
               <div>
                 <h2 className="text-2xl text-white sm:text-3xl">Ready to start? Book a trial.</h2>
                 <p className="mt-2 max-w-xl text-white/70">
-                  Fees are shared when we get in touch, and financial assistance is available for
-                  players who need support to take part.
+                  Membership is {formatZAR(fees.monthlyFeeCents)} per month for all age groups,
+                  with a once-off {formatZAR(fees.joiningFeeCents)} joining fee. Financial
+                  assistance is available for players who need support to take part.
                 </p>
               </div>
             </div>
