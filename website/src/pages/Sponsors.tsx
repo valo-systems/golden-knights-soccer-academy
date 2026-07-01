@@ -351,9 +351,13 @@ function Enquiry({
   selected: string;
   setSelected: (v: string) => void;
 }) {
+  const { addProspect } = useAdmin();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
 
   const canNext = step === 0 ? !!selected : step === 1 ? !!(name && email) : true;
@@ -407,8 +411,25 @@ function Enquiry({
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (step < 2) next();
-                  else setSent(true);
+                  if (step < 2) {
+                    next();
+                  } else {
+                    const details = [
+                      `Sponsorship tier: ${selected}`,
+                      company ? `Company: ${company}` : "",
+                      message,
+                    ]
+                      .filter(Boolean)
+                      .join("\n");
+                    addProspect({
+                      parentName: name,
+                      phone: phone || "—",
+                      email: email || undefined,
+                      source: "Contact",
+                      message: details || undefined,
+                    });
+                    setSent(true);
+                  }
                 }}
                 className="mt-8 [&_label]:text-white/80 [&_input]:border-white/15 [&_input]:bg-white/5 [&_input]:text-white [&_textarea]:border-white/15 [&_textarea]:bg-white/5 [&_textarea]:text-white"
               >
@@ -456,7 +477,11 @@ function Enquiry({
                           />
                         </Field>
                         <Field label="Company" optional>
-                          <Input placeholder="Company name" />
+                          <Input
+                            value={company}
+                            onChange={(e) => setCompany(e.target.value)}
+                            placeholder="Company name"
+                          />
                         </Field>
                         <Field label="Email" required>
                           <Input
@@ -467,7 +492,11 @@ function Enquiry({
                           />
                         </Field>
                         <Field label="Phone" optional>
-                          <Input placeholder="0xx xxx xxxx" />
+                          <Input
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="0xx xxx xxxx"
+                          />
                         </Field>
                       </>
                     )}
@@ -480,7 +509,11 @@ function Enquiry({
                           </span>
                         </div>
                         <Field label="Message" optional>
-                          <Textarea placeholder="Tell us a little about what you have in mind" />
+                          <Textarea
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder="Tell us a little about what you have in mind"
+                          />
                         </Field>
                       </>
                     )}
